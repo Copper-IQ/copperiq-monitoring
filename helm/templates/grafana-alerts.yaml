@@ -23,67 +23,38 @@ data:
 {{ .Files.Get "grafana-alerts/folders.yaml" | indent 4 }}
 
   # Contact points (Slack webhooks)
+  # NOTE: Placeholder ${SLACK_WEBHOOK_URL} must be replaced before deployment
+  # Pulumi will create a separate ConfigMap with the actual webhook injected
   contact-points.yaml: |
-{{- $content := .Files.Get "grafana-alerts/contact-points.yaml" }}
-{{- if .Values.alerts.slackWebhookUrl }}
-{{- $content = replace "${SLACK_WEBHOOK_URL}" .Values.alerts.slackWebhookUrl $content }}
-{{- end }}
-{{ $content | indent 4 }}
+{{ .Files.Get "grafana-alerts/contact-points.yaml" | indent 4 }}
 
   # Notification policies (alert routing)
   notification-policies.yaml: |
 {{ .Files.Get "grafana-alerts/notification-policies.yaml" | indent 4 }}
 
   # Infrastructure alerts
-  {{- if .Files.Get "grafana-alerts/node-disk-space.yaml" }}
   node-disk-space.yaml: |
 {{ .Files.Get "grafana-alerts/node-disk-space.yaml" | indent 4 }}
-  {{- end }}
-  
-  {{- if .Files.Get "grafana-alerts/aks-cluster.yaml" }}
   aks-cluster.yaml: |
 {{ .Files.Get "grafana-alerts/aks-cluster.yaml" | indent 4 }}
-  {{- end }}
 
   # Application alerts
-  {{- if .Files.Get "grafana-alerts/content-platform-queues.yaml" }}
   content-platform-queues.yaml: |
 {{ .Files.Get "grafana-alerts/content-platform-queues.yaml" | indent 4 }}
-  {{- end }}
-
-  {{- if .Files.Get "grafana-alerts/rabbitmq.yaml" }}
   rabbitmq.yaml: |
 {{ .Files.Get "grafana-alerts/rabbitmq.yaml" | indent 4 }}
-  {{- end }}
-
-  {{- if .Files.Get "grafana-alerts/n8n.yaml" }}
   n8n.yaml: |
 {{ .Files.Get "grafana-alerts/n8n.yaml" | indent 4 }}
-  {{- end }}
-
-  {{- if .Files.Get "grafana-alerts/argocd.yaml" }}
   argocd.yaml: |
 {{ .Files.Get "grafana-alerts/argocd.yaml" | indent 4 }}
-  {{- end }}
-
-  {{- if .Files.Get "grafana-alerts/cert-manager.yaml" }}
   cert-manager.yaml: |
 {{ .Files.Get "grafana-alerts/cert-manager.yaml" | indent 4 }}
-  {{- end }}
-
-  {{- if .Files.Get "grafana-alerts/external-dns.yaml" }}
   external-dns.yaml: |
 {{ .Files.Get "grafana-alerts/external-dns.yaml" | indent 4 }}
-  {{- end }}
 
   # Database alerts
-  {{- if .Files.Get "grafana-alerts/azure-postgresql.yaml" }}
   azure-postgresql.yaml: |
 {{ .Files.Get "grafana-alerts/azure-postgresql.yaml" | indent 4 }}
-  {{- end }}
-
-  {{- if .Files.Get "grafana-alerts/azure-mysql.yaml" }}
   azure-mysql.yaml: |
 {{ .Files.Get "grafana-alerts/azure-mysql.yaml" | indent 4 }}
-  {{- end }}
 {{- end }}
