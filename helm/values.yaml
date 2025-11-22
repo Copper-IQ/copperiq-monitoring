@@ -15,6 +15,10 @@ dashboards:
 # Prometheus alert rules
 alerts:
   enabled: true
+  # Slack webhook URL for notifications (injected via ArgoCD or Helm install)
+  # Format: https://hooks.slack.com/services/T.../B.../XXX...
+  slackWebhookUrl: ""
+  
   # Labels for Prometheus Operator to discover PrometheusRules
   labels:
     prometheus: kube-prometheus

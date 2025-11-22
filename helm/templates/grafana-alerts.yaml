@@ -24,7 +24,11 @@ data:
 
   # Contact points (Slack webhooks)
   contact-points.yaml: |
-{{ .Files.Get "grafana-alerts/contact-points.yaml" | indent 4 }}
+{{- $content := .Files.Get "grafana-alerts/contact-points.yaml" }}
+{{- if .Values.alerts.slackWebhookUrl }}
+{{- $content = replace "${SLACK_WEBHOOK_URL}" .Values.alerts.slackWebhookUrl $content }}
+{{- end }}
+{{ $content | indent 4 }}
 
   # Notification policies (alert routing)
   notification-policies.yaml: |
