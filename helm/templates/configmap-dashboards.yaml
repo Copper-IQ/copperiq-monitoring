@@ -1,0 +1,20 @@
+{{- if .Values.dashboards.enabled }}
+{{- $files := .Files }}
+{{- range $path, $_ := .Files.Glob "dashboards/*.json" }}
+{{- $name := base $path | trimSuffix ".json" }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dashboard-{{ $name }}
+  namespace: {{ $.Values.namespace }}
+  labels:
+    {{ $.Values.dashboards.label }}: {{ $.Values.dashboards.labelValue | quote }}
+    app.kubernetes.io/name: copperiq-monitoring
+    app.kubernetes.io/component: dashboard
+    app.kubernetes.io/part-of: observability
+data:
+  {{ base $path }}: |-
+{{ $files.Get $path | indent 4 }}
+{{- end }}
+{{- end }}

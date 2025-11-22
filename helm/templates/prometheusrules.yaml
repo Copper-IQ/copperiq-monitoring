@@ -1,0 +1,8 @@
+{{- if .Values.alerts.enabled }}
+{{- $files := .Files }}
+{{- range $path, $_ := .Files.Glob "alerts/*.yaml" }}
+{{- $name := base $path | trimSuffix ".yaml" }}
+---
+{{ $files.Get $path }}
+{{- end }}
+{{- end }}

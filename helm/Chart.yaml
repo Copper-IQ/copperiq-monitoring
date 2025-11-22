@@ -1,0 +1,14 @@
+apiVersion: v2
+name: copperiq-monitoring
+description: Grafana dashboards and Prometheus alert rules for CopperIQ infrastructure
+type: application
+version: 0.1.0
+appVersion: "1.0"
+keywords:
+  - monitoring
+  - grafana
+  - prometheus
+  - alerting
+maintainers:
+  - name: CopperIQ
+    email: tech@copperiq.com

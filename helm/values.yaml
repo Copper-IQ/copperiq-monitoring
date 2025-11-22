@@ -1,0 +1,34 @@
+# Default values for copperiq-monitoring
+
+# Namespace where resources will be created
+namespace: observability
+
+# Grafana dashboard provisioning
+dashboards:
+  enabled: true
+  # Folder name in Grafana UI
+  folderName: "CopperIQ"
+  # Label that Grafana watches for dashboard ConfigMaps
+  label: grafana_dashboard
+  labelValue: "1"
+
+# Prometheus alert rules
+alerts:
+  enabled: true
+  # Labels for Prometheus Operator to discover PrometheusRules
+  labels:
+    prometheus: kube-prometheus
+    role: alert-rules
+  
+  # Global alert annotations
+  annotations:
+    runbook_url_prefix: "https://github.com/Copper-IQ/copperiq-monitoring/blob/main/docs/runbooks/"
+
+# Current scale context (for documentation)
+scale:
+  workers_per_env: 1
+  active_clients: 10
+  job_duration_min: 2
+  job_duration_max: 8
+  capacity_per_hour_min: 7
+  capacity_per_hour_max: 30
