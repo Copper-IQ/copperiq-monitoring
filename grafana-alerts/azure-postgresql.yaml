@@ -1,0 +1,579 @@
+# Grafana Unified Alerting Rules: azure-postgresql
+# Converted from PrometheusRule: azure-postgresql-alerts
+apiVersion: 1
+groups:
+  - orgId: 1
+    name: azure-postgresql
+    folder: databases
+    interval: 1m
+    rules:
+      - uid: azurepostgresqlhighcpu
+        title: AzurePostgreSQLHighCPU
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: PostgreSQL server {{ $labels.server_name }} CPU > 80%
+          description: |
+            Azure PostgreSQL Flexible Server {{ $labels.server_name }} CPU usage is {{ $value }}%.
+
+            **Databases affected**: n8n-data-shared-dev, n8n-data-shared-prod, langfuse, content-platform
+
+            **Impact**: Query performance degradation, slower response times.
+
+            **Action**:
+            1. Check slow queries in Azure Portal: Monitor → Insights → Query Performance Insight
+            2. Review active connections and long-running queries
+            3. Consider scaling up if sustained
+            4. Check for inefficient queries or missing indexes
+          runbook_url: https://github.com/Copper-IQ/copperiq-monitoring/blob/main/docs/runbooks/azure-postgresql-high-cpu.md
+        labels:
+          severity: warning
+          component: postgresql
+          category: azure-resources
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: azure_postgresql_flexible_server_cpu_percent
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: $B > 80
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+      - uid: azurepostgresqlcriticalcpu
+        title: AzurePostgreSQLCriticalCPU
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: PostgreSQL server {{ $labels.server_name }} CPU > 95% - CRITICAL
+          description: |
+            CRITICAL: Azure PostgreSQL server {{ $labels.server_name }} CPU at {{ $value }}%.
+
+            **Immediate action required**:
+            1. Identify blocking queries: Check pg_stat_activity
+            2. Kill long-running queries if safe
+            3. Scale up database tier immediately
+            4. Check for deadlocks or lock contention
+        labels:
+          severity: critical
+          component: postgresql
+          category: azure-resources
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: azure_postgresql_flexible_server_cpu_percent
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: $B > 95
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+      - uid: azurepostgresqlhighmemory
+        title: AzurePostgreSQLHighMemory
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: PostgreSQL server {{ $labels.server_name }} memory > 85%
+          description: |
+            Azure PostgreSQL memory usage at {{ $value }}%.
+
+            **Impact**: Risk of OOM, query failures, connection issues.
+
+            **Action**:
+            1. Check memory usage in Azure Portal
+            2. Review connection pool sizes (n8n, content-platform configs)
+            3. Check for memory leaks in prepared statements
+            4. Consider scaling up memory tier
+        labels:
+          severity: warning
+          component: postgresql
+          category: azure-resources
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: azure_postgresql_flexible_server_memory_percent
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: $B > 85
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+      - uid: azurepostgresqlstoragenearfull
+        title: AzurePostgreSQLStorageNearFull
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: PostgreSQL server {{ $labels.server_name }} storage > 80% full
+          description: >
+            Azure PostgreSQL storage is {{ $value }}% full.
+
+
+            **Impact**: Risk of write failures, database unavailability.
+
+
+            **Action**:
+
+            1. Check storage growth trend in Azure Portal
+
+            2. Identify largest tables: `SELECT schemaname, tablename,
+            pg_total_relation_size(schemaname||'.'||tablename) FROM pg_tables ORDER BY 3 DESC LIMIT 10;`
+
+            3. Clean up old data if applicable
+
+            4. Enable auto-grow or manually increase storage
+        labels:
+          severity: warning
+          component: postgresql
+          category: azure-resources
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: azure_postgresql_flexible_server_storage_percent
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: $B > 80
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+      - uid: azurepostgresqlstoragecritical
+        title: AzurePostgreSQLStorageCritical
+        condition: C
+        for: 2m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: PostgreSQL server {{ $labels.server_name }} storage > 90% CRITICAL
+          description: |
+            CRITICAL: Storage {{ $value }}% full. Write failures imminent.
+
+            **Immediate action**:
+            1. Increase storage size in Azure Portal immediately
+            2. Pause non-critical writes if possible
+            3. Archive or delete old data urgently
+            4. Check for runaway log growth
+        labels:
+          severity: critical
+          component: postgresql
+          category: azure-resources
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: azure_postgresql_flexible_server_storage_percent
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: $B > 90
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+      - uid: azurepostgresqlhighconnections
+        title: AzurePostgreSQLHighConnections
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: PostgreSQL server {{ $labels.server_name }} connections > 80% of limit
+          description: >
+            Active connections: {{ $value }}% of max limit.
+
+
+            **Impact**: New connections may be rejected, application errors.
+
+
+            **Action**:
+
+            1. Check active connections: `SELECT count(*) FROM pg_stat_activity;`
+
+            2. Identify connection sources: `SELECT usename, application_name, count(*) FROM pg_stat_activity GROUP BY
+            1,2;`
+
+            3. Review connection pool settings in n8n and content-platform
+
+            4. Check for connection leaks (connections not being released)
+
+            5. Consider increasing max_connections or connection pooling
+        labels:
+          severity: warning
+          component: postgresql
+          category: azure-resources
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: >-
+                (azure_postgresql_flexible_server_active_connections /
+                azure_postgresql_flexible_server_connections_limit) * 100
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: $B > 80
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+      - uid: azurepostgresqlfailedconnections
+        title: AzurePostgreSQLFailedConnections
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: PostgreSQL server {{ $labels.server_name }} experiencing failed connections
+          description: |
+            {{ $value }} failed connections per minute.
+
+            **Possible causes**:
+            1. Authentication failures
+            2. Network connectivity issues
+            3. Firewall rules blocking connections
+            4. SSL certificate issues
+
+            **Action**:
+            1. Check Azure firewall rules
+            2. Verify credentials in application configs
+            3. Check VNet/subnet configuration
+            4. Review PostgreSQL logs in Azure Portal
+        labels:
+          severity: warning
+          component: postgresql
+          category: azure-resources
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: rate(azure_postgresql_flexible_server_connections_failed_total[5m])
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: $B > 10
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+      - uid: azurepostgresqlreplicationlag
+        title: AzurePostgreSQLReplicationLag
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: PostgreSQL replication lag > 60 seconds
+          description: |
+            Replication lag is {{ $value }} seconds (if HA/read replicas configured).
+
+            **Impact**: Stale reads from replicas, HA failover delay.
+
+            **Action**:
+            1. Check replica status in Azure Portal
+            2. Verify network connectivity to replica
+            3. Check for long-running transactions blocking replication
+            4. Review write load on primary
+        labels:
+          severity: warning
+          component: postgresql
+          category: azure-resources
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: azure_postgresql_flexible_server_replication_lag_seconds
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: $B > 60
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+      - uid: azurepostgresqlbackupfailed
+        title: AzurePostgreSQLBackupFailed
+        condition: C
+        for: 1h
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: PostgreSQL server {{ $labels.server_name }} backup may be failing
+          description: |
+            No backup storage usage detected for 1 hour.
+
+            **Impact**: Data loss risk if server fails.
+
+            **Action**:
+            1. Check backup status in Azure Portal: Backup and Restore blade
+            2. Verify backup policy is configured
+            3. Check for backup errors in Activity Log
+            4. Open support ticket if backups are actually failing
+        labels:
+          severity: critical
+          component: postgresql
+          category: azure-resources
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: azure_postgresql_flexible_server_backup_storage_used_bytes
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: $B == 0
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__

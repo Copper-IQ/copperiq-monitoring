@@ -1,0 +1,413 @@
+# Grafana Unified Alerting Rules: rabbitmq
+# Converted from PrometheusRule: rabbitmq-alerts
+apiVersion: 1
+groups:
+  - orgId: 1
+    name: rabbitmq
+    folder: applications
+    interval: 30s
+    rules:
+      - uid: rabbitmqhighmemory
+        title: RabbitMQHighMemory
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: RabbitMQ {{ $labels.namespace }} memory > 80%
+          description: >
+            RabbitMQ in {{ $labels.namespace }} is using {{ $value | humanizePercentage }} of memory limit.
+
+
+            **Memory alarm threshold**: 90%
+
+            **Impact**: At 90%, RabbitMQ will block message publishing.
+
+
+            **Action**:
+
+            1. Check memory details: `kubectl exec -n {{ $labels.namespace }} rabbitmq-0 -- rabbitmqctl status`
+
+            2. Check queue lengths: `kubectl exec -n {{ $labels.namespace }} rabbitmq-0 -- rabbitmqctl list_queues name
+            messages`
+
+            3. Check consumer activity: `kubectl exec -n {{ $labels.namespace }} rabbitmq-0 -- rabbitmqctl
+            list_consumers`
+
+            4. Consider increasing memory limit if sustained
+        labels:
+          severity: warning
+          component: rabbitmq
+          category: infrastructure
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: rabbitmq_process_resident_memory_bytes / rabbitmq_resident_memory_limit_bytes
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: $B > 0.8
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+      - uid: rabbitmqmemoryalarm
+        title: RabbitMQMemoryAlarm
+        condition: C
+        for: 2m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: RabbitMQ {{ $labels.namespace }} memory ALARM
+          description: >
+            CRITICAL: RabbitMQ in {{ $labels.namespace }} has triggered memory alarm (>90%).
+
+
+            **Impact**: Message publishing is BLOCKED.
+
+
+            **Immediate action**:
+
+            1. Check alarm status: `kubectl exec -n {{ $labels.namespace }} rabbitmq-0 -- rabbitmqctl list_alarms`
+
+            2. Purge old messages if safe: `kubectl exec -n {{ $labels.namespace }} rabbitmq-0 -- rabbitmqctl
+            purge_queue <queue-name>`
+
+            3. Increase memory limit: Edit StatefulSet memory resources
+
+            4. Restart RabbitMQ: `kubectl delete pod -n {{ $labels.namespace }} rabbitmq-0` (StatefulSet will recreate)
+        labels:
+          severity: critical
+          component: rabbitmq
+          category: infrastructure
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: rabbitmq_process_resident_memory_bytes / rabbitmq_resident_memory_limit_bytes
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: $B > 0.9
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+      - uid: rabbitmqhighdiskusage
+        title: RabbitMQHighDiskUsage
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: RabbitMQ {{ $labels.namespace }} disk > 80% full
+          description: |
+            RabbitMQ in {{ $labels.namespace }} has less than 20% disk space available.
+
+            **Disk alarm threshold**: Usually 50GB or 10% free
+            **Impact**: At threshold, RabbitMQ will block message publishing.
+
+            **Action**:
+            1. Check disk alarm: `kubectl exec -n {{ $labels.namespace }} rabbitmq-0 -- rabbitmqctl list_alarms`
+            2. Check PVC usage: `kubectl exec -n {{ $labels.namespace }} rabbitmq-0 -- df -h /var/lib/rabbitmq`
+            3. Review message persistence settings
+            4. Consider expanding PVC
+        labels:
+          severity: warning
+          component: rabbitmq
+          category: infrastructure
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: >-
+                rabbitmq_disk_space_available_bytes / (rabbitmq_disk_space_available_bytes +
+                rabbitmq_disk_space_used_bytes)
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: $B < 0.2
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+      - uid: rabbitmqnodedown
+        title: RabbitMQNodeDown
+        condition: C
+        for: 2m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: RabbitMQ {{ $labels.namespace }} is down
+          description: |
+            RabbitMQ node in {{ $labels.namespace }} is not responding.
+
+            **Impact**:
+            - Message queue unavailable
+            - n8n workers cannot consume jobs
+            - Content generation stopped
+
+            **Action**:
+            1. Check pod status: `kubectl get pods -n {{ $labels.namespace }} rabbitmq-0`
+            2. Check logs: `kubectl logs -n {{ $labels.namespace }} rabbitmq-0 --tail=200`
+            3. Check events: `kubectl get events -n {{ $labels.namespace }} | grep rabbitmq`
+            4. Check PVC: `kubectl get pvc -n {{ $labels.namespace }}`
+            5. Restart if needed: `kubectl delete pod -n {{ $labels.namespace }} rabbitmq-0`
+        labels:
+          severity: critical
+          component: rabbitmq
+          category: infrastructure
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: up{job="rabbitmq",namespace=~"n8n.*"}
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: $B == 0
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+      - uid: rabbitmqhighfiledescriptors
+        title: RabbitMQHighFileDescriptors
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: RabbitMQ {{ $labels.namespace }} file descriptors > 80%
+          description: >
+            RabbitMQ in {{ $labels.namespace }} is using {{ $value | humanizePercentage }} of file descriptor limit.
+
+
+            **Impact**: At limit, cannot accept new connections.
+
+
+            **Action**:
+
+            1. Check current usage: `kubectl exec -n {{ $labels.namespace }} rabbitmq-0 -- rabbitmqctl status | grep
+            file_descriptors`
+
+            2. Check connection count: `kubectl exec -n {{ $labels.namespace }} rabbitmq-0 -- rabbitmqctl
+            list_connections`
+
+            3. Look for connection leaks in n8n workers
+
+            4. Increase file descriptor limit in StatefulSet if needed
+        labels:
+          severity: warning
+          component: rabbitmq
+          category: infrastructure
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: rabbitmq_process_open_fds / rabbitmq_process_max_fds
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: $B > 0.8
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+      - uid: rabbitmqhighconnectionchurn
+        title: RabbitMQHighConnectionChurn
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: RabbitMQ {{ $labels.namespace }} high connection churn
+          description: |
+            RabbitMQ in {{ $labels.namespace }} is experiencing high connection churn rate.
+
+            **Connection rate**: {{ $value | humanize }} new connections/second
+
+            **Impact**: Performance degradation, potential connection exhaustion.
+
+            **Possible causes**:
+            1. n8n workers restarting frequently
+            2. Application not reusing connections
+            3. Connection timeout too short
+
+            **Action**:
+            1. Check n8n worker restarts: `kubectl get pods -n {{ $labels.namespace }} -l app contains worker`
+            2. Review n8n RabbitMQ connection configuration
+            3. Check for pod crash loops
+        labels:
+          severity: warning
+          component: rabbitmq
+          category: infrastructure
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: rate(rabbitmq_connections_opened_total[5m])
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: $B > 5
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__

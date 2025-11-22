@@ -1,0 +1,411 @@
+# Grafana Unified Alerting Rules: n8n
+# Converted from PrometheusRule: n8n-alerts
+apiVersion: 1
+groups:
+  - orgId: 1
+    name: n8n
+    folder: applications
+    interval: 30s
+    rules:
+      - uid: n8nmainpoddown
+        title: N8NMainPodDown
+        condition: C
+        for: 2m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: n8n {{ $labels.namespace }} main pod unavailable
+          description: >
+            n8n main application pod in {{ $labels.namespace }} is down.
+
+
+            **Impact**: 
+
+            - n8n UI unavailable
+
+            - Workflow management stopped
+
+            - Webhook endpoints unreachable
+
+
+            **Action**:
+
+            1. Check pods: `kubectl get pods -n {{ $labels.namespace }} -l app={{ $labels.deployment }}`
+
+            2. Check logs: `kubectl logs -n {{ $labels.namespace }} -l app={{ $labels.deployment }} --tail=200`
+
+            3. Check events: `kubectl get events -n {{ $labels.namespace }} --sort-by='.lastTimestamp' | grep {{
+            $labels.deployment }}`
+
+            4. Check resource limits: `kubectl top pods -n {{ $labels.namespace }} -l app={{ $labels.deployment }}`
+        labels:
+          severity: critical
+          component: n8n
+          category: application
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: >-
+                kube_deployment_status_replicas_available{deployment=~"n8n.*",deployment!~".*worker",deployment!~".*valkey.*"}
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: $B < 1
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+      - uid: n8nworkerslowcapacity
+        title: N8NWorkersLowCapacity
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: n8n {{ $labels.namespace }} workers low capacity
+          description: |
+            n8n workers in {{ $labels.namespace }} are running at reduced capacity.
+
+            **Available workers**: {{ $value }} / 2
+
+            **Impact**: Reduced workflow execution capacity, queue may build up.
+
+            **Action**:
+            1. Check worker pods: `kubectl get pods -n {{ $labels.namespace }} -l app contains worker`
+            2. Check worker logs: `kubectl logs -n {{ $labels.namespace }} -l app contains worker --tail=100`
+            3. Check RabbitMQ queue depth for backlog impact
+        labels:
+          severity: warning
+          component: n8n
+          category: application
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: kube_deployment_status_replicas_available{deployment=~"n8n.*worker"}
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: $B < 2
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+      - uid: n8nworkersdown
+        title: N8NWorkersDown
+        condition: C
+        for: 2m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: n8n {{ $labels.namespace }} workers completely down
+          description: |
+            ALL n8n workers in {{ $labels.namespace }} are down.
+
+            **Impact**: 
+            - No workflow execution
+            - Queue will accumulate
+            - Content generation stopped
+
+            **Immediate action**:
+            1. Check worker pods: `kubectl get pods -n {{ $labels.namespace }} -l app contains worker`
+            2. Describe failed pods: `kubectl describe pod -n {{ $labels.namespace }} -l app contains worker`
+            3. Check recent logs: `kubectl logs -n {{ $labels.namespace }} -l app contains worker --previous --tail=100`
+            4. Verify RabbitMQ connectivity
+            5. Restart workers: `kubectl rollout restart deployment -n {{ $labels.namespace }} -l app contains worker`
+        labels:
+          severity: critical
+          component: n8n
+          category: application
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: kube_deployment_status_replicas_available{deployment=~"n8n.*worker"}
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: $B < 1
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+      - uid: n8nhigherrorrate
+        title: N8NHighErrorRate
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: n8n {{ $labels.exported_namespace }} high error rate
+          description: |
+            n8n in {{ $labels.exported_namespace }} is experiencing high HTTP error rate.
+
+            **Error rate**: {{ $value | humanizePercentage }}
+
+            **Impact**: User-facing errors, workflow execution failures.
+
+            **Action**:
+            1. Check n8n logs: `kubectl logs -n {{ $labels.exported_namespace }} -l app=n8n --tail=200 | grep -i error`
+            2. Check database connectivity
+            3. Check Valkey (Redis) availability
+            4. Review recent workflow changes in n8n UI
+        labels:
+          severity: warning
+          component: n8n
+          category: application
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: >-
+                sum(rate(nginx_ingress_controller_requests{exported_namespace=~"n8n.*",status=~"5.."}[5m])) by
+                (exported_namespace) / sum(rate(nginx_ingress_controller_requests{exported_namespace=~"n8n.*"}[5m])) by
+                (exported_namespace)
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: $B > 0.05
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+      - uid: n8nvalkeydown
+        title: N8NValkeyDown
+        condition: C
+        for: 2m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: n8n {{ $labels.namespace }} Valkey (Redis) down
+          description: |
+            Valkey (Redis) cache for n8n in {{ $labels.namespace }} is down.
+
+            **Impact**:
+            - Session loss
+            - Cache unavailable
+            - Performance degradation
+            - Possible n8n instability
+
+            **Action**:
+            1. Check Valkey pod: `kubectl get pods -n {{ $labels.namespace }} -l app contains valkey`
+            2. Check logs: `kubectl logs -n {{ $labels.namespace }} -l app contains valkey --tail=100`
+            3. Check PVC if persistent: `kubectl get pvc -n {{ $labels.namespace }}`
+            4. Restart: `kubectl rollout restart deployment -n {{ $labels.namespace }} -l app contains valkey`
+        labels:
+          severity: critical
+          component: n8n
+          category: application
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: kube_deployment_status_replicas_available{deployment=~"n8n.*valkey.*"}
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: $B < 1
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+      - uid: n8nvalkeyhighmemory
+        title: N8NValkeyHighMemory
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: n8n {{ $labels.namespace }} Valkey memory > 80%
+          description: >
+            Valkey (Redis) in {{ $labels.namespace }} is using {{ $value | humanizePercentage }} of memory limit.
+
+
+            **Impact**: Risk of evictions, cache thrashing, OOM.
+
+
+            **Action**:
+
+            1. Check memory usage: `kubectl exec -n {{ $labels.namespace }} deployment/n8n-valkey-primary -- redis-cli
+            INFO memory`
+
+            2. Check eviction policy: `kubectl exec -n {{ $labels.namespace }} deployment/n8n-valkey-primary --
+            redis-cli CONFIG GET maxmemory-policy`
+
+            3. Consider increasing memory limit in deployment
+
+            4. Review cache key patterns for optimization
+        labels:
+          severity: warning
+          component: n8n
+          category: application
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: redis_memory_used_bytes{namespace=~"n8n.*"} / redis_memory_max_bytes{namespace=~"n8n.*"}
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: $B > 0.8
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__

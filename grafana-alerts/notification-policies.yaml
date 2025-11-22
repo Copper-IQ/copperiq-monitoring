@@ -1,17 +1,17 @@
 # Grafana Notification Policies
-# Routes alerts to contact points based on labels (severity, component, etc.)
+# Routes all alerts to #infra-alerts Slack channel
 apiVersion: 1
 
 policies:
   - orgId: 1
-    receiver: slack-monitoring  # Default contact point
+    receiver: slack-infra-alerts
     group_by: ['alertname', 'cluster', 'namespace']
     group_wait: 30s
     group_interval: 5m
     repeat_interval: 12h
     routes:
-      # Critical and warning alerts go to #alerts channel
-      - receiver: slack-alerts
+      # Critical and warning alerts - faster notification
+      - receiver: slack-infra-alerts
         matchers:
           - severity =~ "critical|warning"
         continue: false
@@ -19,8 +19,8 @@ policies:
         group_interval: 5m
         repeat_interval: 4h
       
-      # Informational alerts go to #monitoring channel
-      - receiver: slack-monitoring
+      # Informational alerts - slower notification
+      - receiver: slack-infra-alerts
         matchers:
           - severity = "info"
         continue: false
