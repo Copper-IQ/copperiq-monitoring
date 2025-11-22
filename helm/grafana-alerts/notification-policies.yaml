@@ -1,0 +1,29 @@
+# Grafana Notification Policies
+# Routes all alerts to #infra-alerts Slack channel
+apiVersion: 1
+
+policies:
+  - orgId: 1
+    receiver: slack-infra-alerts
+    group_by: ['alertname', 'cluster', 'namespace']
+    group_wait: 30s
+    group_interval: 5m
+    repeat_interval: 12h
+    routes:
+      # Critical and warning alerts - faster notification
+      - receiver: slack-infra-alerts
+        matchers:
+          - severity =~ "critical|warning"
+        continue: false
+        group_wait: 10s
+        group_interval: 5m
+        repeat_interval: 4h
+      
+      # Informational alerts - slower notification
+      - receiver: slack-infra-alerts
+        matchers:
+          - severity = "info"
+        continue: false
+        group_wait: 30s
+        group_interval: 10m
+        repeat_interval: 24h

@@ -1,0 +1,21 @@
+# Grafana Contact Points (Notification Channels)
+# Configured with Incoming Webhook for #infra-alerts channel
+apiVersion: 1
+
+contactPoints:
+  - orgId: 1
+    name: slack-infra-alerts
+    receivers:
+      - uid: slack-infra-alerts-receiver
+        type: slack
+        settings:
+          url: ${SLACK_WEBHOOK_URL}
+          title: |
+            {{ .CommonLabels.alertname }} ({{ .CommonLabels.severity }} - {{ .Status }})
+          text: |
+            {{ range .Alerts }}
+            *Summary*: {{ .Annotations.summary }}
+            *Description*: {{ .Annotations.description }}
+            *Namespace*: {{ .Labels.namespace }}
+            {{ end }}
+        disableResolveMessage: false

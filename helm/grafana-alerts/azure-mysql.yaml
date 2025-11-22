@@ -1,0 +1,381 @@
+# Grafana Unified Alerting Rules: azure-mysql
+# Converted from PrometheusRule: azure-mysql-alerts
+apiVersion: 1
+groups:
+  - orgId: 1
+    name: azure-mysql
+    folder: databases
+    interval: 1m
+    rules:
+      - uid: azuremysqlhighcpu
+        title: AzureMySQLHighCPU
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: MySQL server {{ $labels.server_name }} CPU > 80%
+          description: |
+            Azure MySQL Flexible Server {{ $labels.server_name }} CPU usage is {{ $value }}%.
+
+            **Database**: Risers App
+
+            **Impact**: Query performance degradation, slower response times.
+
+            **Action**:
+            1. Check slow queries in Azure Portal
+            2. Review active connections
+            3. Check for missing indexes
+            4. Consider scaling up if sustained
+        labels:
+          severity: warning
+          component: mysql
+          category: azure-resources
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: azure_mysql_flexible_server_cpu_percent
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: $B > 80
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+      - uid: azuremysqlhighmemory
+        title: AzureMySQLHighMemory
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: MySQL server {{ $labels.server_name }} memory > 85%
+          description: |
+            Azure MySQL memory usage at {{ $value }}%.
+
+            **Impact**: Buffer pool pressure, query performance degradation.
+
+            **Action**:
+            1. Check InnoDB buffer pool usage
+            2. Review connection pool sizes
+            3. Check for memory leaks
+            4. Consider scaling up memory tier
+        labels:
+          severity: warning
+          component: mysql
+          category: azure-resources
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: azure_mysql_flexible_server_memory_percent
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: $B > 85
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+      - uid: azuremysqlstoragenearfull
+        title: AzureMySQLStorageNearFull
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: MySQL server {{ $labels.server_name }} storage > 80% full
+          description: |
+            Azure MySQL storage is {{ $value }}% full.
+
+            **Impact**: Risk of write failures, database unavailability.
+
+            **Action**:
+            1. Check storage growth trend
+            2. Identify largest tables
+            3. Archive old data if applicable
+            4. Enable auto-grow or manually increase storage
+        labels:
+          severity: warning
+          component: mysql
+          category: azure-resources
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: azure_mysql_flexible_server_storage_percent
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: $B > 80
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+      - uid: azuremysqlhighconnections
+        title: AzureMySQLHighConnections
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: MySQL server {{ $labels.server_name }} connections > 80% of limit
+          description: |
+            Active connections: {{ $value }}% of max limit.
+
+            **Impact**: New connections may be rejected, application errors.
+
+            **Action**:
+            1. Check active connections: `SHOW PROCESSLIST;`
+            2. Review connection pool settings in Risers App
+            3. Check for connection leaks
+            4. Consider increasing max_connections
+        labels:
+          severity: warning
+          component: mysql
+          category: azure-resources
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: (azure_mysql_flexible_server_active_connections / azure_mysql_flexible_server_connections_limit) * 100
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: $B > 80
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+      - uid: azuremysqlabortedconnections
+        title: AzureMySQLAbortedConnections
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: MySQL server {{ $labels.server_name }} high aborted connections
+          description: |
+            {{ $value }} aborted connections per minute.
+
+            **Possible causes**:
+            1. Network issues
+            2. Application crashes before closing connections
+            3. Timeouts
+            4. Authentication failures
+
+            **Action**:
+            1. Check MySQL error log in Azure Portal
+            2. Review application connection handling
+            3. Check network stability
+            4. Verify firewall rules
+        labels:
+          severity: warning
+          component: mysql
+          category: azure-resources
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: rate(azure_mysql_flexible_server_aborted_connections_total[5m])
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: $B > 10
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+      - uid: azuremysqlreplicationlag
+        title: AzureMySQLReplicationLag
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: MySQL replication lag > 60 seconds
+          description: |
+            Replication lag is {{ $value }} seconds (if HA/read replicas configured).
+
+            **Impact**: Stale reads from replicas, HA failover delay.
+
+            **Action**:
+            1. Check replica status in Azure Portal
+            2. Verify network connectivity
+            3. Check for long-running transactions
+            4. Review write load on primary
+        labels:
+          severity: warning
+          component: mysql
+          category: azure-resources
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: azure_mysql_flexible_server_replication_lag_seconds
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: $B > 60
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
