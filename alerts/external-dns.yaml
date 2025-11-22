@@ -1,0 +1,90 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: external-dns-alerts
+  namespace: observability
+  labels:
+    prometheus: kube-prometheus
+    role: alert-rules
+    app.kubernetes.io/name: copperiq-monitoring
+    app.kubernetes.io/component: alert-rules
+spec:
+  groups:
+    - name: external-dns
+      interval: 30s
+      rules:
+        - alert: ExternalDNSSyncErrors
+          expr: |
+            rate(external_dns_registry_errors_total[5m]) > 0.1
+          for: 10m
+          labels:
+            severity: warning
+            component: external-dns
+            category: platform
+          annotations:
+            summary: "External-DNS sync errors detected"
+            description: |
+              External-DNS is experiencing errors syncing DNS records to Azure DNS.
+              
+              **Error rate**: {{ $value | humanize }} errors/second
+              
+              **Impact**: New ingresses may not be reachable, DNS records may drift.
+              
+              **Possible causes**:
+              1. Azure DNS API issues
+              2. Authentication/authorization problems
+              3. Rate limiting
+              4. Network connectivity
+              
+              **Action**:
+              1. Check external-dns logs: `kubectl logs -n external-dns -l app.kubernetes.io/name=external-dns --tail=200`
+              2. Verify Azure permissions: external-dns needs DNS Zone Contributor role
+              3. Check DNS zones in Azure portal for manual changes/locks
+              4. Verify workload identity binding is correct
+
+        - alert: ExternalDNSDown
+          expr: |
+            up{job="external-dns"} == 0
+          for: 5m
+          labels:
+            severity: critical
+            component: external-dns
+            category: platform
+          annotations:
+            summary: "External-DNS controller is down"
+            description: |
+              External-DNS controller is not responding.
+              
+              **Impact**:
+              - New services won't get DNS records
+              - Existing records won't be updated
+              - DNS drift from desired state
+              
+              **Action**:
+              1. Check pods: `kubectl get pods -n external-dns`
+              2. Check logs: `kubectl logs -n external-dns -l app.kubernetes.io/name=external-dns --tail=100`
+              3. Check events: `kubectl get events -n external-dns --sort-by='.lastTimestamp'`
+              4. Restart if needed: `kubectl rollout restart deployment -n external-dns external-dns`
+
+        - alert: ExternalDNSSourceErrors
+          expr: |
+            rate(external_dns_source_errors_total[5m]) > 0.1
+          for: 10m
+          labels:
+            severity: warning
+            component: external-dns
+            category: platform
+          annotations:
+            summary: "External-DNS source discovery errors"
+            description: |
+              External-DNS is failing to discover ingress/service resources.
+              
+              **Error rate**: {{ $value | humanize }} errors/second
+              
+              **Impact**: Some ingresses may not get DNS records created.
+              
+              **Action**:
+              1. Check external-dns logs: `kubectl logs -n external-dns -l app.kubernetes.io/name=external-dns | grep -i error`
+              2. Verify RBAC permissions: external-dns needs to list/watch ingresses and services
+              3. Check for malformed ingress annotations
+              4. Verify source configuration in external-dns deployment

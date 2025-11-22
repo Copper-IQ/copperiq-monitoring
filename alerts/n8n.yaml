@@ -1,0 +1,155 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: n8n-alerts
+  namespace: observability
+  labels:
+    prometheus: kube-prometheus
+    role: alert-rules
+    app.kubernetes.io/name: copperiq-monitoring
+    app.kubernetes.io/component: alert-rules
+spec:
+  groups:
+    - name: n8n
+      interval: 30s
+      rules:
+        - alert: N8NMainPodDown
+          expr: |
+            kube_deployment_status_replicas_available{deployment=~"n8n.*",deployment!~".*worker",deployment!~".*valkey.*"} < 1
+          for: 2m
+          labels:
+            severity: critical
+            component: n8n
+            category: application
+          annotations:
+            summary: "n8n {{ $labels.namespace }} main pod unavailable"
+            description: |
+              n8n main application pod in {{ $labels.namespace }} is down.
+              
+              **Impact**: 
+              - n8n UI unavailable
+              - Workflow management stopped
+              - Webhook endpoints unreachable
+              
+              **Action**:
+              1. Check pods: `kubectl get pods -n {{ $labels.namespace }} -l app={{ $labels.deployment }}`
+              2. Check logs: `kubectl logs -n {{ $labels.namespace }} -l app={{ $labels.deployment }} --tail=200`
+              3. Check events: `kubectl get events -n {{ $labels.namespace }} --sort-by='.lastTimestamp' | grep {{ $labels.deployment }}`
+              4. Check resource limits: `kubectl top pods -n {{ $labels.namespace }} -l app={{ $labels.deployment }}`
+
+        - alert: N8NWorkersLowCapacity
+          expr: |
+            kube_deployment_status_replicas_available{deployment=~"n8n.*worker"} < 2
+          for: 5m
+          labels:
+            severity: warning
+            component: n8n
+            category: application
+          annotations:
+            summary: "n8n {{ $labels.namespace }} workers low capacity"
+            description: |
+              n8n workers in {{ $labels.namespace }} are running at reduced capacity.
+              
+              **Available workers**: {{ $value }} / 2
+              
+              **Impact**: Reduced workflow execution capacity, queue may build up.
+              
+              **Action**:
+              1. Check worker pods: `kubectl get pods -n {{ $labels.namespace }} -l app contains worker`
+              2. Check worker logs: `kubectl logs -n {{ $labels.namespace }} -l app contains worker --tail=100`
+              3. Check RabbitMQ queue depth for backlog impact
+
+        - alert: N8NWorkersDown
+          expr: |
+            kube_deployment_status_replicas_available{deployment=~"n8n.*worker"} < 1
+          for: 2m
+          labels:
+            severity: critical
+            component: n8n
+            category: application
+          annotations:
+            summary: "n8n {{ $labels.namespace }} workers completely down"
+            description: |
+              ALL n8n workers in {{ $labels.namespace }} are down.
+              
+              **Impact**: 
+              - No workflow execution
+              - Queue will accumulate
+              - Content generation stopped
+              
+              **Immediate action**:
+              1. Check worker pods: `kubectl get pods -n {{ $labels.namespace }} -l app contains worker`
+              2. Describe failed pods: `kubectl describe pod -n {{ $labels.namespace }} -l app contains worker`
+              3. Check recent logs: `kubectl logs -n {{ $labels.namespace }} -l app contains worker --previous --tail=100`
+              4. Verify RabbitMQ connectivity
+              5. Restart workers: `kubectl rollout restart deployment -n {{ $labels.namespace }} -l app contains worker`
+
+        - alert: N8NHighErrorRate
+          expr: |
+            sum(rate(nginx_ingress_controller_requests{exported_namespace=~"n8n.*",status=~"5.."}[5m])) by (exported_namespace) 
+            / sum(rate(nginx_ingress_controller_requests{exported_namespace=~"n8n.*"}[5m])) by (exported_namespace) > 0.05
+          for: 5m
+          labels:
+            severity: warning
+            component: n8n
+            category: application
+          annotations:
+            summary: "n8n {{ $labels.exported_namespace }} high error rate"
+            description: |
+              n8n in {{ $labels.exported_namespace }} is experiencing high HTTP error rate.
+              
+              **Error rate**: {{ $value | humanizePercentage }}
+              
+              **Impact**: User-facing errors, workflow execution failures.
+              
+              **Action**:
+              1. Check n8n logs: `kubectl logs -n {{ $labels.exported_namespace }} -l app=n8n --tail=200 | grep -i error`
+              2. Check database connectivity
+              3. Check Valkey (Redis) availability
+              4. Review recent workflow changes in n8n UI
+
+        - alert: N8NValkeyDown
+          expr: |
+            kube_deployment_status_replicas_available{deployment=~"n8n.*valkey.*"} < 1
+          for: 2m
+          labels:
+            severity: critical
+            component: n8n
+            category: application
+          annotations:
+            summary: "n8n {{ $labels.namespace }} Valkey (Redis) down"
+            description: |
+              Valkey (Redis) cache for n8n in {{ $labels.namespace }} is down.
+              
+              **Impact**:
+              - Session loss
+              - Cache unavailable
+              - Performance degradation
+              - Possible n8n instability
+              
+              **Action**:
+              1. Check Valkey pod: `kubectl get pods -n {{ $labels.namespace }} -l app contains valkey`
+              2. Check logs: `kubectl logs -n {{ $labels.namespace }} -l app contains valkey --tail=100`
+              3. Check PVC if persistent: `kubectl get pvc -n {{ $labels.namespace }}`
+              4. Restart: `kubectl rollout restart deployment -n {{ $labels.namespace }} -l app contains valkey`
+
+        - alert: N8NValkeyHighMemory
+          expr: |
+            redis_memory_used_bytes{namespace=~"n8n.*"} / redis_memory_max_bytes{namespace=~"n8n.*"} > 0.8
+          for: 10m
+          labels:
+            severity: warning
+            component: n8n
+            category: application
+          annotations:
+            summary: "n8n {{ $labels.namespace }} Valkey memory > 80%"
+            description: |
+              Valkey (Redis) in {{ $labels.namespace }} is using {{ $value | humanizePercentage }} of memory limit.
+              
+              **Impact**: Risk of evictions, cache thrashing, OOM.
+              
+              **Action**:
+              1. Check memory usage: `kubectl exec -n {{ $labels.namespace }} deployment/n8n-valkey-primary -- redis-cli INFO memory`
+              2. Check eviction policy: `kubectl exec -n {{ $labels.namespace }} deployment/n8n-valkey-primary -- redis-cli CONFIG GET maxmemory-policy`
+              3. Consider increasing memory limit in deployment
+              4. Review cache key patterns for optimization
