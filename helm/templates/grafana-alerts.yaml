@@ -22,12 +22,8 @@ data:
   folders.yaml: |
 {{ .Files.Get "grafana-alerts/folders.yaml" | indent 4 }}
 
-  # Contact points (Slack webhooks)
-  # NOTE: Placeholder ${SLACK_WEBHOOK_URL} must be replaced before deployment
-  # Pulumi will create a separate ConfigMap with the actual webhook injected
-  contact-points.yaml: |
-{{ .Files.Get "grafana-alerts/contact-points.yaml" | indent 4 }}
-
+  # NOTE: contact-points.yaml is managed by Pulumi (separate ConfigMap with webhook injected)
+  
   # Notification policies (alert routing)
   notification-policies.yaml: |
 {{ .Files.Get "grafana-alerts/notification-policies.yaml" | indent 4 }}
