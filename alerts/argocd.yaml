@@ -1,0 +1,131 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: argocd-alerts
+  namespace: observability
+  labels:
+    prometheus: kube-prometheus
+    role: alert-rules
+    app.kubernetes.io/name: copperiq-monitoring
+    app.kubernetes.io/component: alert-rules
+spec:
+  groups:
+    - name: argocd
+      interval: 30s
+      rules:
+        - alert: ArgoCDAppNotSynced
+          expr: |
+            argocd_app_info{sync_status!="Synced"} > 0
+          for: 10m
+          labels:
+            severity: warning
+            component: argocd
+            category: platform
+          annotations:
+            summary: "ArgoCD app {{ $labels.name }} not synced"
+            description: |
+              Application {{ $labels.name }} in {{ $labels.namespace }} is out of sync.
+              
+              **Sync status**: {{ $labels.sync_status }}
+              **Health status**: {{ $labels.health_status }}
+              
+              **Impact**: GitOps workflow broken, changes not deployed.
+              
+              **Action**:
+              1. Check app status: `argocd app get {{ $labels.name }}`
+              2. View sync errors: `argocd app get {{ $labels.name }} --show-operation`
+              3. Manual sync if needed: `argocd app sync {{ $labels.name }}`
+              4. Check ArgoCD UI: https://argocd.accept.copperiq.com
+
+        - alert: ArgoCDSyncFailure
+          expr: |
+            increase(argocd_app_sync_total{phase="Failed"}[5m]) > 0
+          for: 5m
+          labels:
+            severity: warning
+            component: argocd
+            category: platform
+          annotations:
+            summary: "ArgoCD sync failure for {{ $labels.name }}"
+            description: |
+              Application {{ $labels.name }} failed to sync in the last 5 minutes.
+              
+              **Impact**: Deployment blocked, updates not applied.
+              
+              **Action**:
+              1. Check sync errors: `argocd app get {{ $labels.name }}`
+              2. View application events: `kubectl get events -n {{ $labels.dest_namespace }} --sort-by='.lastTimestamp'`
+              3. Check for resource conflicts or validation errors
+              4. Review recent commits in source repository
+
+        - alert: ArgoCDServerDown
+          expr: |
+            up{job="argocd-server-metrics"} == 0
+          for: 2m
+          labels:
+            severity: critical
+            component: argocd
+            category: platform
+          annotations:
+            summary: "ArgoCD server is down"
+            description: |
+              ArgoCD API server is not responding.
+              
+              **Impact**: 
+              - ArgoCD UI unavailable
+              - GitOps deployments stopped
+              - Cannot sync or manage applications
+              
+              **Action**:
+              1. Check server pod: `kubectl get pods -n argocd -l app.kubernetes.io/name=argocd-server`
+              2. Check server logs: `kubectl logs -n argocd -l app.kubernetes.io/name=argocd-server --tail=100`
+              3. Check ingress: `kubectl get ingress -n argocd`
+              4. Restart if needed: `kubectl rollout restart deployment -n argocd argocd-server`
+
+        - alert: ArgoCDRepoServerErrors
+          expr: |
+            rate(argocd_git_request_total{request_type="ls-remote",status_code!~"2.."}[5m]) > 0.1
+          for: 10m
+          labels:
+            severity: warning
+            component: argocd
+            category: platform
+          annotations:
+            summary: "ArgoCD repo server experiencing errors"
+            description: |
+              ArgoCD repo server is failing to connect to Git repositories.
+              
+              **Error rate**: {{ $value | humanize }} errors/second
+              
+              **Impact**: Cannot fetch latest manifests, deployments stalled.
+              
+              **Possible causes**:
+              1. Git repository unreachable
+              2. Authentication issues
+              3. Network connectivity problems
+              
+              **Action**:
+              1. Check repo-server logs: `kubectl logs -n argocd -l app.kubernetes.io/name=argocd-repo-server --tail=200`
+              2. Test Git connectivity: `kubectl exec -n argocd -it deployment/argocd-repo-server -- git ls-remote <repo-url>`
+              3. Verify credentials: `argocd repo list`
+
+        - alert: ArgoCDApplicationDegraded
+          expr: |
+            argocd_app_info{health_status="Degraded"} > 0
+          for: 5m
+          labels:
+            severity: warning
+            component: argocd
+            category: platform
+          annotations:
+            summary: "ArgoCD application {{ $labels.name }} is degraded"
+            description: |
+              Application {{ $labels.name }} health status is Degraded.
+              
+              **Impact**: Application may not be functioning correctly.
+              
+              **Action**:
+              1. Check app details: `argocd app get {{ $labels.name }}`
+              2. View resource health: `kubectl get all -n {{ $labels.dest_namespace }}`
+              3. Check pod logs: `kubectl logs -n {{ $labels.dest_namespace }} -l app={{ $labels.name }} --tail=100`
+              4. Review recent changes in ArgoCD UI

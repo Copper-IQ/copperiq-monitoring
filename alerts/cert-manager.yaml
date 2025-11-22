@@ -1,0 +1,133 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: cert-manager-alerts
+  namespace: observability
+  labels:
+    prometheus: kube-prometheus
+    role: alert-rules
+    app.kubernetes.io/name: copperiq-monitoring
+    app.kubernetes.io/component: alert-rules
+spec:
+  groups:
+    - name: cert-manager
+      interval: 1m
+      rules:
+        - alert: CertificateExpiringSoon
+          expr: |
+            certmanager_certificate_expiration_timestamp_seconds - time() < 604800
+          for: 1m
+          labels:
+            severity: warning
+            component: cert-manager
+            category: platform
+          annotations:
+            summary: "Certificate {{ $labels.name }} expires in < 7 days"
+            description: |
+              Certificate {{ $labels.name }} in namespace {{ $labels.namespace }} will expire in less than 7 days.
+              
+              **Expiry**: {{ $value | humanizeDuration }} remaining
+              
+              **Impact**: Service will become unreachable when certificate expires.
+              
+              **Action**:
+              1. Check certificate status: `kubectl get certificate {{ $labels.name }} -n {{ $labels.namespace }}`
+              2. Check cert-manager logs: `kubectl logs -n cert-manager -l app=cert-manager --tail=100`
+              3. Describe certificate for errors: `kubectl describe certificate {{ $labels.name }} -n {{ $labels.namespace }}`
+              4. Manual renewal if needed: `kubectl delete secret {{ $labels.name }}-tls -n {{ $labels.namespace }}`
+
+        - alert: CertificateExpiringCritical
+          expr: |
+            certmanager_certificate_expiration_timestamp_seconds - time() < 172800
+          for: 1m
+          labels:
+            severity: critical
+            component: cert-manager
+            category: platform
+          annotations:
+            summary: "Certificate {{ $labels.name }} expires in < 48 hours"
+            description: |
+              CRITICAL: Certificate {{ $labels.name }} in namespace {{ $labels.namespace }} expires in less than 48 hours!
+              
+              **Expiry**: {{ $value | humanizeDuration }} remaining
+              
+              **Immediate action required**:
+              1. Check certificate status: `kubectl get certificate {{ $labels.name }} -n {{ $labels.namespace }} -o yaml`
+              2. Check recent cert-manager logs: `kubectl logs -n cert-manager -l app=cert-manager --tail=500 | grep -i {{ $labels.name }}`
+              3. Check ACME challenge status: `kubectl get challenges --all-namespaces`
+              4. Force renewal: `kubectl delete secret {{ $labels.name }}-tls -n {{ $labels.namespace }}`
+              5. Monitor renewal: `watch kubectl get certificate {{ $labels.name }} -n {{ $labels.namespace }}`
+
+        - alert: CertificateNotReady
+          expr: |
+            certmanager_certificate_ready_status{condition="False"} > 0
+          for: 30m
+          labels:
+            severity: critical
+            component: cert-manager
+            category: platform
+          annotations:
+            summary: "Certificate {{ $labels.name }} is not ready"
+            description: |
+              Certificate {{ $labels.name }} in namespace {{ $labels.namespace }} has been in NotReady state for 30 minutes.
+              
+              **Impact**: New or renewed certificate not available, service may be inaccessible.
+              
+              **Action**:
+              1. Describe certificate: `kubectl describe certificate {{ $labels.name }} -n {{ $labels.namespace }}`
+              2. Check certificate request: `kubectl describe certificaterequest -n {{ $labels.namespace }}`
+              3. Check ACME orders: `kubectl describe order -n {{ $labels.namespace }}`
+              4. Check DNS challenge if DNS-01: `kubectl get challenges -n {{ $labels.namespace }}`
+              5. Check cert-manager controller logs: `kubectl logs -n cert-manager -l app=cert-manager`
+
+        - alert: CertManagerDown
+          expr: |
+            up{job="cert-manager"} == 0
+          for: 5m
+          labels:
+            severity: critical
+            component: cert-manager
+            category: platform
+          annotations:
+            summary: "Cert-manager controller is down"
+            description: |
+              Cert-manager controller is not responding.
+              
+              **Impact**:
+              - Certificate renewals stopped
+              - New certificates cannot be issued
+              - Certificate expiry risk
+              
+              **Action**:
+              1. Check cert-manager pods: `kubectl get pods -n cert-manager`
+              2. Check pod logs: `kubectl logs -n cert-manager -l app=cert-manager --tail=200`
+              3. Check pod events: `kubectl get events -n cert-manager --sort-by='.lastTimestamp'`
+              4. Restart if needed: `kubectl rollout restart deployment -n cert-manager cert-manager`
+
+        - alert: ACMEChallengesFailing
+          expr: |
+            increase(certmanager_http_acme_client_request_count{status=~"4..|5.."}[10m]) > 5
+          for: 10m
+          labels:
+            severity: warning
+            component: cert-manager
+            category: platform
+          annotations:
+            summary: "ACME challenges are failing"
+            description: |
+              Multiple ACME challenge requests are failing.
+              
+              **Failed requests**: {{ $value }} in the last 10 minutes
+              
+              **Possible causes**:
+              1. DNS not propagated (DNS-01 challenge)
+              2. Ingress not accessible (HTTP-01 challenge)
+              3. Let's Encrypt rate limits
+              4. Network connectivity issues
+              
+              **Action**:
+              1. Check challenges: `kubectl get challenges --all-namespaces`
+              2. Describe failing challenges: `kubectl describe challenge -n <namespace>`
+              3. For DNS-01: Verify external-dns is working
+              4. For HTTP-01: Verify ingress is accessible
+              5. Check Let's Encrypt status: https://letsencrypt.status.io/
