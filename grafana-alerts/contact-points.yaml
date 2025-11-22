@@ -1,0 +1,34 @@
+# Grafana Contact Points (Notification Channels)
+# Defines how alerts are delivered (Slack, PagerDuty, email, etc.)
+apiVersion: 1
+
+contactPoints:
+  - orgId: 1
+    name: slack-alerts
+    receivers:
+      - uid: slack-alerts-receiver
+        type: slack
+        settings:
+          url: SLACK_WEBHOOK_URL_ALERTS
+          title: |
+            {{ .CommonLabels.alertname }} ({{ .CommonLabels.severity }} - {{ .Status }})
+          text: |
+            {{ range .Alerts }}
+            **Summary**: {{ .Annotations.summary }}
+            **Description**: {{ .Annotations.description }}
+            **Namespace**: {{ .Labels.namespace }}
+            {{ end }}
+        disableResolveMessage: false
+
+  - orgId: 1
+    name: slack-monitoring
+    receivers:
+      - uid: slack-monitoring-receiver
+        type: slack
+        settings:
+          url: SLACK_WEBHOOK_URL_MONITORING
+          title: |
+            {{ .CommonLabels.alertname }} ({{ .Status }})
+          text: |
+            {{ range .Alerts }}{{ .Annotations.summary }}{{ end }}
+        disableResolveMessage: false

@@ -16,3 +16,6 @@ Thumbs.db
 # Temp files
 *.tmp
 *.bak
+
+# Dashboard backups (not for Git)
+backup-dashboards/

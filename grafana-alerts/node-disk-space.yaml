@@ -1,0 +1,192 @@
+# Grafana Unified Alerting Rules: Node Disk Space
+# Converted from PrometheusRule: node-disk-space-alerts
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: node-disk-space
+    folder: infrastructure
+    interval: 30s
+    rules:
+      - uid: node-disk-warning
+        title: NodeDiskSpaceWarning
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: "Node {{ $labels.node }} disk > 75% full"
+          description: |
+            Node {{ $labels.node }} has less than 25% disk space available ({{ $value | humanizePercentage }} free).
+            
+            **Likely cause**: Unpruned Docker images accumulating on the node.
+            
+            **Impact**: ImageGC will start at 85%, may cause pod evictions.
+            
+            **Action**: 
+            1. Check image cache size: `crictl images`
+            2. Manually prune if needed: `crictl rmi --prune`
+            3. Consider automated image pruning policy
+          runbook_url: "https://github.com/Copper-IQ/copperiq-monitoring/blob/main/docs/runbooks/node-disk-space-critical.md"
+        labels:
+          severity: warning
+          component: aks
+          category: infrastructure
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"})
+              refId: A
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: $B < 0.25
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+
+      - uid: node-disk-critical
+        title: NodeDiskSpaceCritical
+        condition: C
+        for: 2m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: "Node {{ $labels.node }} disk > 85% full - CRITICAL"
+          description: |
+            Node {{ $labels.node }} has less than 15% disk space available ({{ $value | humanizePercentage }} free).
+            
+            **CRITICAL**: ImageGC threshold reached. Pod evictions imminent.
+            
+            **Immediate action required**:
+            1. Identify largest images: `crictl images | sort -k7 -h`
+            2. Force prune unused images: `crictl rmi --prune`
+            3. Check for large container layers: `du -sh /var/lib/containerd/*`
+            4. Monitor pod evictions: `kubectl get events --field-selector reason=Evicted`
+          runbook_url: "https://github.com/Copper-IQ/copperiq-monitoring/blob/main/docs/runbooks/node-disk-space-critical.md"
+        labels:
+          severity: critical
+          component: aks
+          category: infrastructure
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"})
+              refId: A
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: $B < 0.15
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+
+      - uid: node-ephemeral-storage-high
+        title: NodeEphemeralStorageHigh
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: "Node {{ $labels.node }} ephemeral storage > 80%"
+          description: |
+            Container runtime storage on node {{ $labels.node }} is {{ $value | humanizePercentage }} full.
+            
+            **Cause**: Container layer accumulation in {{ $labels.mountpoint }}.
+            
+            **Action**:
+            1. Check container disk usage: `crictl stats`
+            2. Inspect stopped containers: `crictl ps -a --state Exited`
+            3. Remove stopped containers: `crictl rm $(crictl ps -a -q --state Exited)`
+          runbook_url: "https://github.com/Copper-IQ/copperiq-monitoring/blob/main/docs/runbooks/node-disk-space-critical.md"
+        labels:
+          severity: warning
+          component: aks
+          category: infrastructure
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              expr: (1 - (node_filesystem_avail_bytes{mountpoint=~"/var/lib/(docker|containerd)"} / node_filesystem_size_bytes{mountpoint=~"/var/lib/(docker|containerd)"}))
+              refId: A
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: $B > 0.8
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__

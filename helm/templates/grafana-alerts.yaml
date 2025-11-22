@@ -1,0 +1,85 @@
+{{- if .Values.alerts.enabled }}
+#
+# Grafana Unified Alerting Provisioning ConfigMap
+#
+# This ConfigMap provisions alert rules, folders, and notification policies to Grafana.
+# Files are mounted to /etc/grafana/provisioning/alerting/ via Pulumi configuration.
+#
+# Architecture: Grafana evaluates alerts → Grafana Alertmanager → Slack
+# (replaces Prometheus-managed alerting for multi-datasource support)
+#
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "copperiq-monitoring.fullname" . }}-grafana-alerts
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "copperiq-monitoring.labels" . | nindent 4 }}
+    app.kubernetes.io/component: grafana-alerts
+    grafana_alert: "1"  # Enables sidecar auto-discovery
+data:
+  # Alert folder definitions
+  folders.yaml: |
+{{ .Files.Get "grafana-alerts/folders.yaml" | indent 4 }}
+
+  # Contact points (Slack webhooks)
+  contact-points.yaml: |
+{{ .Files.Get "grafana-alerts/contact-points.yaml" | indent 4 }}
+
+  # Notification policies (alert routing)
+  notification-policies.yaml: |
+{{ .Files.Get "grafana-alerts/notification-policies.yaml" | indent 4 }}
+
+  # Infrastructure alerts
+  {{- if .Files.Get "grafana-alerts/node-disk-space.yaml" }}
+  node-disk-space.yaml: |
+{{ .Files.Get "grafana-alerts/node-disk-space.yaml" | indent 4 }}
+  {{- end }}
+  
+  {{- if .Files.Get "grafana-alerts/aks-cluster.yaml" }}
+  aks-cluster.yaml: |
+{{ .Files.Get "grafana-alerts/aks-cluster.yaml" | indent 4 }}
+  {{- end }}
+
+  # Application alerts
+  {{- if .Files.Get "grafana-alerts/content-platform-queues.yaml" }}
+  content-platform-queues.yaml: |
+{{ .Files.Get "grafana-alerts/content-platform-queues.yaml" | indent 4 }}
+  {{- end }}
+
+  {{- if .Files.Get "grafana-alerts/rabbitmq.yaml" }}
+  rabbitmq.yaml: |
+{{ .Files.Get "grafana-alerts/rabbitmq.yaml" | indent 4 }}
+  {{- end }}
+
+  {{- if .Files.Get "grafana-alerts/n8n.yaml" }}
+  n8n.yaml: |
+{{ .Files.Get "grafana-alerts/n8n.yaml" | indent 4 }}
+  {{- end }}
+
+  {{- if .Files.Get "grafana-alerts/argocd.yaml" }}
+  argocd.yaml: |
+{{ .Files.Get "grafana-alerts/argocd.yaml" | indent 4 }}
+  {{- end }}
+
+  {{- if .Files.Get "grafana-alerts/cert-manager.yaml" }}
+  cert-manager.yaml: |
+{{ .Files.Get "grafana-alerts/cert-manager.yaml" | indent 4 }}
+  {{- end }}
+
+  {{- if .Files.Get "grafana-alerts/external-dns.yaml" }}
+  external-dns.yaml: |
+{{ .Files.Get "grafana-alerts/external-dns.yaml" | indent 4 }}
+  {{- end }}
+
+  # Database alerts
+  {{- if .Files.Get "grafana-alerts/azure-postgresql.yaml" }}
+  azure-postgresql.yaml: |
+{{ .Files.Get "grafana-alerts/azure-postgresql.yaml" | indent 4 }}
+  {{- end }}
+
+  {{- if .Files.Get "grafana-alerts/azure-mysql.yaml" }}
+  azure-mysql.yaml: |
+{{ .Files.Get "grafana-alerts/azure-mysql.yaml" | indent 4 }}
+  {{- end }}
+{{- end }}

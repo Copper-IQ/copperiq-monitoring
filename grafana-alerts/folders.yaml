@@ -1,0 +1,16 @@
+# Grafana Alert Folders Provisioning
+# Creates folder structure for organizing alerts
+apiVersion: 1
+
+folders:
+  - uid: infrastructure
+    title: Infrastructure
+    description: Infrastructure-level alerts for AKS cluster, nodes, disks, networking
+    
+  - uid: applications
+    title: Applications
+    description: Application-level alerts for n8n, RabbitMQ, ArgoCD, Cert-Manager, External-DNS
+    
+  - uid: databases
+    title: Databases
+    description: Database alerts for Azure PostgreSQL and MySQL managed services
