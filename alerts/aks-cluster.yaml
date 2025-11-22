@@ -1,0 +1,166 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: aks-cluster-alerts
+  namespace: observability
+  labels:
+    prometheus: kube-prometheus
+    role: alert-rules
+    app.kubernetes.io/name: copperiq-monitoring
+    app.kubernetes.io/component: alert-rules
+spec:
+  groups:
+    - name: aks-cluster
+      interval: 30s
+      rules:
+        - alert: AKSNodeHighCPU
+          expr: |
+            instance:node_cpu_utilisation:rate5m > 0.8
+          for: 15m
+          labels:
+            severity: warning
+            component: aks
+            category: infrastructure
+          annotations:
+            summary: "AKS node {{ $labels.node }} CPU > 80%"
+            description: |
+              Node {{ $labels.node }} CPU usage is {{ $value | humanizePercentage }}.
+              
+              **Impact**: Performance degradation, potential autoscaling trigger.
+              
+              **Action**:
+              1. Check top pods by CPU: `kubectl top pods --all-namespaces --sort-by=cpu`
+              2. Identify resource-hungry workloads
+              3. Review pod resource requests/limits
+              4. Consider scaling out (more nodes) or up (larger nodes)
+
+        - alert: AKSNodeHighMemory
+          expr: |
+            instance:node_memory_utilisation:ratio > 0.85
+          for: 10m
+          labels:
+            severity: warning
+            component: aks
+            category: infrastructure
+          annotations:
+            summary: "AKS node {{ $labels.node }} memory > 85%"
+            description: |
+              Node {{ $labels.node }} memory usage is {{ $value | humanizePercentage }}.
+              
+              **Impact**: Risk of pod evictions, OOM kills.
+              
+              **Action**:
+              1. Check top pods by memory: `kubectl top pods --all-namespaces --sort-by=memory`
+              2. Check for memory leaks
+              3. Review pod memory requests/limits
+              4. Check for pods without memory limits
+
+        - alert: AKSPodRestartingFrequently
+          expr: |
+            rate(kube_pod_container_status_restarts_total[15m]) > 0.333
+          for: 5m
+          labels:
+            severity: warning
+            component: aks
+            category: infrastructure
+          annotations:
+            summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} restarting frequently"
+            description: |
+              Pod is restarting more than 5 times in 15 minutes.
+              
+              **Impact**: Application instability, potential data loss.
+              
+              **Action**:
+              1. Check pod logs: `kubectl logs -n {{ $labels.namespace }} {{ $labels.pod }} --previous --tail=100`
+              2. Describe pod: `kubectl describe pod -n {{ $labels.namespace }} {{ $labels.pod }}`
+              3. Check for OOM kills: `kubectl get events -n {{ $labels.namespace }} | grep {{ $labels.pod }}`
+              4. Review application health checks
+
+        - alert: AKSPodsStuckPending
+          expr: |
+            kube_pod_status_phase{phase="Pending"} > 0
+          for: 5m
+          labels:
+            severity: critical
+            component: aks
+            category: infrastructure
+          annotations:
+            summary: "Pods stuck in Pending state"
+            description: |
+              {{ $value }} pod(s) in {{ $labels.namespace }} stuck in Pending state.
+              
+              **Possible causes**:
+              1. Insufficient cluster resources
+              2. Node selector/affinity mismatch
+              3. PVC not bound
+              4. ImagePullBackOff
+              
+              **Action**:
+              1. Describe pod: `kubectl describe pod -n {{ $labels.namespace }} {{ $labels.pod }}`
+              2. Check node resources: `kubectl top nodes`
+              3. Check events: `kubectl get events -n {{ $labels.namespace }} --sort-by='.lastTimestamp'`
+              4. Scale cluster if resource constrained
+
+        - alert: AKSNodeNotReady
+          expr: |
+            kube_node_status_condition{condition="Ready",status="false"} > 0
+          for: 5m
+          labels:
+            severity: critical
+            component: aks
+            category: infrastructure
+          annotations:
+            summary: "AKS node {{ $labels.node }} not ready"
+            description: |
+              Node {{ $labels.node }} has been NotReady for 5 minutes.
+              
+              **Impact**: Reduced cluster capacity, pod evictions.
+              
+              **Action**:
+              1. Check node status: `kubectl get nodes`
+              2. Describe node: `kubectl describe node {{ $labels.node }}`
+              3. Check kubelet logs
+              4. Verify node health in Azure Portal
+              5. Reboot or replace node if necessary
+
+        - alert: AKSAPIServerHighLatency
+          expr: |
+            histogram_quantile(0.99, sum(rate(apiserver_request_duration_seconds_bucket{verb!~"WATCH|CONNECT"}[5m])) by (le)) > 1
+          for: 10m
+          labels:
+            severity: warning
+            component: aks
+            category: infrastructure
+          annotations:
+            summary: "AKS API server latency high"
+            description: |
+              API server p99 latency is {{ $value | humanizeDuration }}.
+              
+              **Impact**: kubectl slowness, delayed reconciliation, deployment delays.
+              
+              **Action**:
+              1. Check API server load
+              2. Review recent changes (deployments, CRD operations)
+              3. Check for misbehaving controllers
+              4. Consider API server throttling limits
+
+        - alert: AKSAPIServerErrors
+          expr: |
+            sum(rate(apiserver_request_total{code=~"5.."}[5m])) / sum(rate(apiserver_request_total[5m])) > 0.05
+          for: 5m
+          labels:
+            severity: critical
+            component: aks
+            category: infrastructure
+          annotations:
+            summary: "AKS API server error rate > 5%"
+            description: |
+              API server returning {{ $value | humanizePercentage }} errors.
+              
+              **Impact**: Control plane degraded, operations failing.
+              
+              **Action**:
+              1. Check AKS cluster health in Azure Portal
+              2. Review Azure Service Health for AKS issues
+              3. Check etcd health if accessible
+              4. Open Azure support ticket if persistent

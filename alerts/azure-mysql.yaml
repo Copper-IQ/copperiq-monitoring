@@ -1,0 +1,149 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: azure-mysql-alerts
+  namespace: observability
+  labels:
+    prometheus: kube-prometheus
+    role: alert-rules
+    app.kubernetes.io/name: copperiq-monitoring
+    app.kubernetes.io/component: alert-rules
+spec:
+  groups:
+    - name: azure-mysql
+      interval: 1m
+      rules:
+        # Note: These alerts use Azure Monitor metrics via Grafana Azure Monitor datasource
+        # Metrics are typically available as: azure_mysql_flexible_server_<metric_name>
+        
+        - alert: AzureMySQLHighCPU
+          expr: |
+            azure_mysql_flexible_server_cpu_percent > 80
+          for: 10m
+          labels:
+            severity: warning
+            component: mysql
+            category: azure-resources
+          annotations:
+            summary: "MySQL server {{ $labels.server_name }} CPU > 80%"
+            description: |
+              Azure MySQL Flexible Server {{ $labels.server_name }} CPU usage is {{ $value }}%.
+              
+              **Database**: Risers App
+              
+              **Impact**: Query performance degradation, slower response times.
+              
+              **Action**:
+              1. Check slow queries in Azure Portal
+              2. Review active connections
+              3. Check for missing indexes
+              4. Consider scaling up if sustained
+
+        - alert: AzureMySQLHighMemory
+          expr: |
+            azure_mysql_flexible_server_memory_percent > 85
+          for: 10m
+          labels:
+            severity: warning
+            component: mysql
+            category: azure-resources
+          annotations:
+            summary: "MySQL server {{ $labels.server_name }} memory > 85%"
+            description: |
+              Azure MySQL memory usage at {{ $value }}%.
+              
+              **Impact**: Buffer pool pressure, query performance degradation.
+              
+              **Action**:
+              1. Check InnoDB buffer pool usage
+              2. Review connection pool sizes
+              3. Check for memory leaks
+              4. Consider scaling up memory tier
+
+        - alert: AzureMySQLStorageNearFull
+          expr: |
+            azure_mysql_flexible_server_storage_percent > 80
+          for: 5m
+          labels:
+            severity: warning
+            component: mysql
+            category: azure-resources
+          annotations:
+            summary: "MySQL server {{ $labels.server_name }} storage > 80% full"
+            description: |
+              Azure MySQL storage is {{ $value }}% full.
+              
+              **Impact**: Risk of write failures, database unavailability.
+              
+              **Action**:
+              1. Check storage growth trend
+              2. Identify largest tables
+              3. Archive old data if applicable
+              4. Enable auto-grow or manually increase storage
+
+        - alert: AzureMySQLHighConnections
+          expr: |
+            (azure_mysql_flexible_server_active_connections / azure_mysql_flexible_server_connections_limit) * 100 > 80
+          for: 5m
+          labels:
+            severity: warning
+            component: mysql
+            category: azure-resources
+          annotations:
+            summary: "MySQL server {{ $labels.server_name }} connections > 80% of limit"
+            description: |
+              Active connections: {{ $value }}% of max limit.
+              
+              **Impact**: New connections may be rejected, application errors.
+              
+              **Action**:
+              1. Check active connections: `SHOW PROCESSLIST;`
+              2. Review connection pool settings in Risers App
+              3. Check for connection leaks
+              4. Consider increasing max_connections
+
+        - alert: AzureMySQLAbortedConnections
+          expr: |
+            rate(azure_mysql_flexible_server_aborted_connections_total[5m]) > 10
+          for: 5m
+          labels:
+            severity: warning
+            component: mysql
+            category: azure-resources
+          annotations:
+            summary: "MySQL server {{ $labels.server_name }} high aborted connections"
+            description: |
+              {{ $value }} aborted connections per minute.
+              
+              **Possible causes**:
+              1. Network issues
+              2. Application crashes before closing connections
+              3. Timeouts
+              4. Authentication failures
+              
+              **Action**:
+              1. Check MySQL error log in Azure Portal
+              2. Review application connection handling
+              3. Check network stability
+              4. Verify firewall rules
+
+        - alert: AzureMySQLReplicationLag
+          expr: |
+            azure_mysql_flexible_server_replication_lag_seconds > 60
+          for: 5m
+          labels:
+            severity: warning
+            component: mysql
+            category: azure-resources
+          annotations:
+            summary: "MySQL replication lag > 60 seconds"
+            description: |
+              Replication lag is {{ $value }} seconds (if HA/read replicas configured).
+              
+              **Impact**: Stale reads from replicas, HA failover delay.
+              
+              **Action**:
+              1. Check replica status in Azure Portal
+              2. Verify network connectivity
+              3. Check for long-running transactions
+              4. Review write load on primary
