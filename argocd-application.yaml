@@ -1,0 +1,48 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: copperiq-monitoring
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  
+  source:
+    repoURL: https://github.com/Copper-IQ/copperiq-monitoring.git
+    targetRevision: master
+    path: helm
+    helm:
+      values: |
+        alerts:
+          enabled: true
+          # slackWebhookUrl injected via Pulumi-managed Secret
+        
+        dashboards:
+          enabled: true
+          folderName: "CopperIQ"
+  
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+  
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  
+  ignoreDifferences:
+    - group: ""
+      kind: ConfigMap
+      name: grafana-contact-points
+      jsonPointers:
+        - /data
