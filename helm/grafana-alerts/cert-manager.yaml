@@ -19,7 +19,7 @@ groups:
             Certificate {{ $labels.name }} in namespace {{ $labels.namespace }} will expire in less than 7 days.
 
 
-            **Expiry**: {{ $value }}s remaining
+            **Expiry**: {{ if $values.B }}{{ humanizeDuration $values.B.Value }}{{ end }} remaining
 
 
             **Impact**: Service will become unreachable when certificate expires.
@@ -90,7 +90,7 @@ groups:
             CRITICAL: Certificate {{ $labels.name }} in namespace {{ $labels.namespace }} expires in less than 48 hours!
 
 
-            **Expiry**: {{ $value }}s remaining
+            **Expiry**: {{ if $values.B }}{{ humanizeDuration $values.B.Value }}{{ end }} remaining
 
 
             **Immediate action required**:

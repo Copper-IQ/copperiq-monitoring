@@ -14,9 +14,9 @@ groups:
         noDataState: OK
         execErrState: Alerting
         annotations:
-          summary: 'Content Platform Dev queue backlog: {{ $value }} messages'
+          summary: 'Content Platform Dev queue backlog: {{ if $values.B }}{{ humanize $values.B.Value }}{{ end }} messages'
           description: >
-            Development environment n8n queue is growing: {{ $value }} messages queued.
+            Development environment n8n queue is growing: {{ if $values.B }}{{ humanize $values.B.Value }}{{ end }} messages queued.
 
 
             **Context**: 
@@ -94,9 +94,9 @@ groups:
         noDataState: OK
         execErrState: Alerting
         annotations:
-          summary: 'Content Platform Prod queue backlog: {{ $value }} messages'
+          summary: 'Content Platform Prod queue backlog: {{ if $values.B }}{{ humanize $values.B.Value }}{{ end }} messages'
           description: >
-            Production environment n8n queue is growing: {{ $value }} messages queued.
+            Production environment n8n queue is growing: {{ if $values.B }}{{ humanize $values.B.Value }}{{ end }} messages queued.
 
 
             **Context**: 
@@ -176,9 +176,9 @@ groups:
         noDataState: OK
         execErrState: Alerting
         annotations:
-          summary: 'Content Platform Prod queue CRITICAL: {{ $value }} messages'
+          summary: 'Content Platform Prod queue CRITICAL: {{ if $values.B }}{{ humanize $values.B.Value }}{{ end }} messages'
           description: |
-            SEVERE BACKLOG DETECTED: {{ $value }} messages in production queue.
+            SEVERE BACKLOG DETECTED: {{ if $values.B }}{{ humanize $values.B.Value }}{{ end }} messages in production queue.
 
             At current capacity (~7-30 jobs/hour), this represents 33-143 hours of backlog.
 
@@ -241,12 +241,12 @@ groups:
         annotations:
           summary: Content Platform queue messages aging (>10 min)
           description: >
-            Oldest message in {{ $labels.namespace }} queue is {{ $value }}s old.
+            Oldest message in {{ $labels.namespace }} queue is {{ if $values.B }}{{ humanizeDuration $values.B.Value }}{{ end }} old.
 
 
             **Expected**: 2-8 minutes (normal job duration)
 
-            **Actual**: {{ $value }}s
+            **Actual**: {{ if $values.B }}{{ humanizeDuration $values.B.Value }}{{ end }}
 
 
             **Possible causes**:
@@ -319,12 +319,12 @@ groups:
         annotations:
           summary: Content Platform queue messages STALE (>30 min)
           description: >
-            CRITICAL: Oldest message in {{ $labels.namespace }} is {{ $value }}s old.
+            CRITICAL: Oldest message in {{ $labels.namespace }} is {{ if $values.B }}{{ humanizeDuration $values.B.Value }}{{ end }} old.
 
 
             **Expected job duration**: 2-8 minutes
 
-            **Actual age**: {{ $value }}s
+            **Actual age**: {{ if $values.B }}{{ humanizeDuration $values.B.Value }}{{ end }}
 
 
             **Consumers may be stuck or crashed**.

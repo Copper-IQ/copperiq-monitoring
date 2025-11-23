@@ -16,7 +16,7 @@ groups:
         annotations:
           summary: RabbitMQ {{ $labels.namespace }} memory > 80%
           description: >
-            RabbitMQ in {{ $labels.namespace }} is using {{ printf "%.1f%%" (mul $value 100) }} of memory limit.
+            RabbitMQ in {{ $labels.namespace }} is using {{ if $values.B }}{{ humanizePercentage $values.B.Value }}{{ end }} of memory limit.
 
 
             **Memory alarm threshold**: 90%
@@ -284,7 +284,7 @@ groups:
         annotations:
           summary: RabbitMQ {{ $labels.namespace }} file descriptors > 80%
           description: >
-            RabbitMQ in {{ $labels.namespace }} is using {{ printf "%.1f%%" (mul $value 100) }} of file descriptor limit.
+            RabbitMQ in {{ $labels.namespace }} is using {{ if $values.B }}{{ humanizePercentage $values.B.Value }}{{ end }} of file descriptor limit.
 
 
             **Impact**: At limit, cannot accept new connections.
