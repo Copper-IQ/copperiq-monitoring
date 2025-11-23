@@ -19,3 +19,4 @@ Thumbs.db
 
 # Dashboard backups (not for Git)
 backup-dashboards/
+node_modules/
