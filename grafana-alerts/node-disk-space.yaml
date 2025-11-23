@@ -16,7 +16,7 @@ groups:
         annotations:
           summary: Node {{ $labels.node }} disk > 75% full
           description: |
-            Node {{ $labels.node }} has less than 25% disk space available ({{ $value | humanizePercentage }} free).
+            Node {{ $labels.node }} has less than 25% disk space available ({{ printf "%.1f%%" (mul $value 100) }} free).
 
             **Likely cause**: Unpruned Docker images accumulating on the node.
 
@@ -79,7 +79,7 @@ groups:
         annotations:
           summary: Node {{ $labels.node }} disk > 85% full - CRITICAL
           description: |
-            Node {{ $labels.node }} has less than 15% disk space available ({{ $value | humanizePercentage }} free).
+            Node {{ $labels.node }} has less than 15% disk space available ({{ printf "%.1f%%" (mul $value 100) }} free).
 
             **CRITICAL**: ImageGC threshold reached. Pod evictions imminent.
 
@@ -141,7 +141,7 @@ groups:
         annotations:
           summary: Node {{ $labels.node }} ephemeral storage > 80%
           description: |
-            Container runtime storage on node {{ $labels.node }} is {{ $value | humanizePercentage }} full.
+            Container runtime storage on node {{ $labels.node }} is {{ printf "%.1f%%" (mul $value 100) }} full.
 
             **Cause**: Container layer accumulation in {{ $labels.mountpoint }}.
 

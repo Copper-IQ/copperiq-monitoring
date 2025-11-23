@@ -208,7 +208,7 @@ groups:
             ArgoCD repo server is failing to connect to Git repositories.
 
 
-            **Error rate**: {{ $value | humanize }} errors/second
+            **Error rate**: {{ $value }} errors/second
 
 
             **Impact**: Cannot fetch latest manifests, deployments stalled.

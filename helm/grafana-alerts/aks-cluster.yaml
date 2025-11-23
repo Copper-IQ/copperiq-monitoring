@@ -16,7 +16,7 @@ groups:
         annotations:
           summary: AKS node {{ $labels.node }} CPU > 80%
           description: |
-            Node {{ $labels.node }} CPU usage is {{ $value | humanizePercentage }}.
+            Node {{ $labels.node }} CPU usage is {{ printf "%.1f%%" (mul $value 100) }}.
 
             **Impact**: Performance degradation, potential autoscaling trigger.
 
@@ -77,7 +77,7 @@ groups:
         annotations:
           summary: AKS node {{ $labels.node }} memory > 85%
           description: |
-            Node {{ $labels.node }} memory usage is {{ $value | humanizePercentage }}.
+            Node {{ $labels.node }} memory usage is {{ printf "%.1f%%" (mul $value 100) }}.
 
             **Impact**: Risk of pod evictions, OOM kills.
 
@@ -326,7 +326,7 @@ groups:
         annotations:
           summary: AKS API server latency high
           description: |
-            API server p99 latency is {{ $value | humanizeDuration }}.
+            API server p99 latency is {{ $value }}s.
 
             **Impact**: kubectl slowness, delayed reconciliation, deployment delays.
 
@@ -389,7 +389,7 @@ groups:
         annotations:
           summary: AKS API server error rate > 5%
           description: |
-            API server returning {{ $value | humanizePercentage }} errors.
+            API server returning {{ printf "%.1f%%" (mul $value 100) }} errors.
 
             **Impact**: Control plane degraded, operations failing.
 

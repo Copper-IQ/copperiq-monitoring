@@ -18,7 +18,7 @@ groups:
           description: |
             External-DNS is experiencing errors syncing DNS records to Azure DNS.
 
-            **Error rate**: {{ $value | humanize }} errors/second
+            **Error rate**: {{ $value }} errors/second
 
             **Impact**: New ingresses may not be reachable, DNS records may drift.
 
@@ -152,7 +152,7 @@ groups:
             External-DNS is failing to discover ingress/service resources.
 
 
-            **Error rate**: {{ $value | humanize }} errors/second
+            **Error rate**: {{ $value }} errors/second
 
 
             **Impact**: Some ingresses may not get DNS records created.

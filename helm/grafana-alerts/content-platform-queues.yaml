@@ -241,12 +241,12 @@ groups:
         annotations:
           summary: Content Platform queue messages aging (>10 min)
           description: >
-            Oldest message in {{ $labels.namespace }} queue is {{ $value | humanizeDuration }} old.
+            Oldest message in {{ $labels.namespace }} queue is {{ $value }}s old.
 
 
             **Expected**: 2-8 minutes (normal job duration)
 
-            **Actual**: {{ $value | humanizeDuration }}
+            **Actual**: {{ $value }}s
 
 
             **Possible causes**:
@@ -319,12 +319,12 @@ groups:
         annotations:
           summary: Content Platform queue messages STALE (>30 min)
           description: >
-            CRITICAL: Oldest message in {{ $labels.namespace }} is {{ $value | humanizeDuration }} old.
+            CRITICAL: Oldest message in {{ $labels.namespace }} is {{ $value }}s old.
 
 
             **Expected job duration**: 2-8 minutes
 
-            **Actual age**: {{ $value | humanizeDuration }}
+            **Actual age**: {{ $value }}s
 
 
             **Consumers may be stuck or crashed**.

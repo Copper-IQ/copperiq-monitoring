@@ -220,7 +220,7 @@ groups:
           description: |
             n8n in {{ $labels.exported_namespace }} is experiencing high HTTP error rate.
 
-            **Error rate**: {{ $value | humanizePercentage }}
+            **Error rate**: {{ printf "%.1f%%" (mul $value 100) }}
 
             **Impact**: User-facing errors, workflow execution failures.
 
@@ -349,7 +349,7 @@ groups:
         annotations:
           summary: n8n {{ $labels.namespace }} Valkey memory > 80%
           description: >
-            Valkey (Redis) in {{ $labels.namespace }} is using {{ $value | humanizePercentage }} of memory limit.
+            Valkey (Redis) in {{ $labels.namespace }} is using {{ printf "%.1f%%" (mul $value 100) }} of memory limit.
 
 
             **Impact**: Risk of evictions, cache thrashing, OOM.
