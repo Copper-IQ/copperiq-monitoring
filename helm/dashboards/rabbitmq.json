@@ -100,7 +100,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "(rabbitmq_process_resident_memory_bytes{namespace=\"n8n-dev\"} / rabbitmq_resident_memory_limit_bytes{namespace=\"n8n-dev\"}) * 100",
+          "expr": "(rabbitmq_process_resident_memory_bytes{namespace=~\"$namespace\"} / rabbitmq_resident_memory_limit_bytes{namespace=~\"$namespace\"}) * 100",
           "refId": "A"
         }
       ],
@@ -162,7 +162,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "(rabbitmq_process_resident_memory_bytes{namespace=\"n8n-prod\"} / rabbitmq_resident_memory_limit_bytes{namespace=\"n8n-prod\"}) * 100",
+          "expr": "(rabbitmq_process_resident_memory_bytes{namespace=~\"$namespace\"} / rabbitmq_resident_memory_limit_bytes{namespace=~\"$namespace\"}) * 100",
           "refId": "A"
         }
       ],
@@ -224,7 +224,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "(rabbitmq_disk_space_available_bytes{namespace=\"n8n-dev\"} / rabbitmq_disk_space_available_limit_bytes{namespace=\"n8n-dev\"}) * 100",
+          "expr": "(rabbitmq_disk_space_available_bytes{namespace=~\"$namespace\"} / rabbitmq_disk_space_available_limit_bytes{namespace=~\"$namespace\"}) * 100",
           "refId": "A"
         }
       ],
@@ -286,7 +286,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "(rabbitmq_disk_space_available_bytes{namespace=\"n8n-prod\"} / rabbitmq_disk_space_available_limit_bytes{namespace=\"n8n-prod\"}) * 100",
+          "expr": "(rabbitmq_disk_space_available_bytes{namespace=~\"$namespace\"} / rabbitmq_disk_space_available_limit_bytes{namespace=~\"$namespace\"}) * 100",
           "refId": "A"
         }
       ],
@@ -384,12 +384,12 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "rabbitmq_queue_messages{namespace=\"n8n-dev\"}",
+          "expr": "rabbitmq_queue_messages{namespace=~\"$namespace\"}",
           "legendFormat": "Dev - {{queue}}",
           "refId": "A"
         },
         {
-          "expr": "rabbitmq_queue_messages{namespace=\"n8n-prod\"}",
+          "expr": "rabbitmq_queue_messages{namespace=~\"$namespace\"}",
           "legendFormat": "Prod - {{queue}}",
           "refId": "B"
         }
@@ -475,22 +475,22 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "rate(rabbitmq_channel_messages_published_total{namespace=\"n8n-dev\"}[5m])",
+          "expr": "rate(rabbitmq_channel_messages_published_total{namespace=~\"$namespace\"}[5m])",
           "legendFormat": "Dev Publish",
           "refId": "A"
         },
         {
-          "expr": "rate(rabbitmq_channel_messages_delivered_total{namespace=\"n8n-dev\"}[5m])",
+          "expr": "rate(rabbitmq_channel_messages_delivered_total{namespace=~\"$namespace\"}[5m])",
           "legendFormat": "Dev Deliver",
           "refId": "B"
         },
         {
-          "expr": "rate(rabbitmq_channel_messages_published_total{namespace=\"n8n-prod\"}[5m])",
+          "expr": "rate(rabbitmq_channel_messages_published_total{namespace=~\"$namespace\"}[5m])",
           "legendFormat": "Prod Publish",
           "refId": "C"
         },
         {
-          "expr": "rate(rabbitmq_channel_messages_delivered_total{namespace=\"n8n-prod\"}[5m])",
+          "expr": "rate(rabbitmq_channel_messages_delivered_total{namespace=~\"$namespace\"}[5m])",
           "legendFormat": "Prod Deliver",
           "refId": "D"
         }
@@ -580,12 +580,12 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "rabbitmq_queue_consumers{namespace=\"n8n-dev\"}",
+          "expr": "rabbitmq_queue_consumers{namespace=~\"$namespace\"}",
           "legendFormat": "Dev - {{queue}}",
           "refId": "A"
         },
         {
-          "expr": "rabbitmq_queue_consumers{namespace=\"n8n-prod\"}",
+          "expr": "rabbitmq_queue_consumers{namespace=~\"$namespace\"}",
           "legendFormat": "Prod - {{queue}}",
           "refId": "B"
         }
@@ -681,12 +681,12 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "(rabbitmq_process_open_fds{namespace=\"n8n-dev\"} / rabbitmq_process_max_fds{namespace=\"n8n-dev\"}) * 100",
+          "expr": "(rabbitmq_process_open_fds{namespace=~\"$namespace\"} / rabbitmq_process_max_fds{namespace=~\"$namespace\"}) * 100",
           "legendFormat": "Dev File Descriptors",
           "refId": "A"
         },
         {
-          "expr": "(rabbitmq_process_open_fds{namespace=\"n8n-prod\"} / rabbitmq_process_max_fds{namespace=\"n8n-prod\"}) * 100",
+          "expr": "(rabbitmq_process_open_fds{namespace=~\"$namespace\"} / rabbitmq_process_max_fds{namespace=~\"$namespace\"}) * 100",
           "legendFormat": "Prod File Descriptors",
           "refId": "B"
         }
@@ -772,22 +772,22 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "rabbitmq_connections{namespace=\"n8n-dev\"}",
+          "expr": "rabbitmq_connections{namespace=~\"$namespace\"}",
           "legendFormat": "Dev Connections",
           "refId": "A"
         },
         {
-          "expr": "rabbitmq_channels{namespace=\"n8n-dev\"}",
+          "expr": "rabbitmq_channels{namespace=~\"$namespace\"}",
           "legendFormat": "Dev Channels",
           "refId": "B"
         },
         {
-          "expr": "rabbitmq_connections{namespace=\"n8n-prod\"}",
+          "expr": "rabbitmq_connections{namespace=~\"$namespace\"}",
           "legendFormat": "Prod Connections",
           "refId": "C"
         },
         {
-          "expr": "rabbitmq_channels{namespace=\"n8n-prod\"}",
+          "expr": "rabbitmq_channels{namespace=~\"$namespace\"}",
           "legendFormat": "Prod Channels",
           "refId": "D"
         }
@@ -893,22 +893,22 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "rabbitmq_alarms_memory_used_watermark{namespace=\"n8n-dev\"}",
+          "expr": "rabbitmq_alarms_memory_used_watermark{namespace=~\"$namespace\"}",
           "legendFormat": "Dev Memory Alarm",
           "refId": "A"
         },
         {
-          "expr": "rabbitmq_alarms_free_disk_space_watermark{namespace=\"n8n-dev\"}",
+          "expr": "rabbitmq_alarms_free_disk_space_watermark{namespace=~\"$namespace\"}",
           "legendFormat": "Dev Disk Alarm",
           "refId": "B"
         },
         {
-          "expr": "rabbitmq_alarms_memory_used_watermark{namespace=\"n8n-prod\"}",
+          "expr": "rabbitmq_alarms_memory_used_watermark{namespace=~\"$namespace\"}",
           "legendFormat": "Prod Memory Alarm",
           "refId": "C"
         },
         {
-          "expr": "rabbitmq_alarms_free_disk_space_watermark{namespace=\"n8n-prod\"}",
+          "expr": "rabbitmq_alarms_free_disk_space_watermark{namespace=~\"$namespace\"}",
           "legendFormat": "Prod Disk Alarm",
           "refId": "D"
         }
@@ -944,6 +944,32 @@
         "regex": "",
         "skipUrlSync": false,
         "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "hide": 0,
+        "includeAll": true,
+        "label": "Namespace",
+        "multi": true,
+        "name": "namespace",
+        "options": [],
+        "query": {
+          "query": "label_values(rabbitmq_queue_messages, namespace)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
       }
     ]
   },
