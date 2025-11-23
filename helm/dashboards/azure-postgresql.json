@@ -37,7 +37,7 @@
     {
       "datasource": {
         "type": "grafana-azure-monitor-datasource",
-        "uid": "${DS_AZURE_MONITOR}"
+        "uid": "P1EB995EACC6832D3"
       },
       "description": "CPU utilization percentage (80% warning, 90% critical)",
       "fieldConfig": {
@@ -105,7 +105,7 @@
     {
       "datasource": {
         "type": "grafana-azure-monitor-datasource",
-        "uid": "${DS_AZURE_MONITOR}"
+        "uid": "P1EB995EACC6832D3"
       },
       "description": "Memory utilization percentage (80% warning, 90% critical)",
       "fieldConfig": {
@@ -173,7 +173,7 @@
     {
       "datasource": {
         "type": "grafana-azure-monitor-datasource",
-        "uid": "${DS_AZURE_MONITOR}"
+        "uid": "P1EB995EACC6832D3"
       },
       "description": "Storage utilization percentage (80% warning, 90% critical)",
       "fieldConfig": {
@@ -241,7 +241,7 @@
     {
       "datasource": {
         "type": "grafana-azure-monitor-datasource",
-        "uid": "${DS_AZURE_MONITOR}"
+        "uid": "P1EB995EACC6832D3"
       },
       "description": "Active connections (80% warning, 90% critical)",
       "fieldConfig": {
@@ -309,7 +309,7 @@
     {
       "datasource": {
         "type": "grafana-azure-monitor-datasource",
-        "uid": "${DS_AZURE_MONITOR}"
+        "uid": "P1EB995EACC6832D3"
       },
       "description": "CPU usage trend over time",
       "fieldConfig": {
@@ -411,7 +411,7 @@
     {
       "datasource": {
         "type": "grafana-azure-monitor-datasource",
-        "uid": "${DS_AZURE_MONITOR}"
+        "uid": "P1EB995EACC6832D3"
       },
       "description": "Memory usage trend over time",
       "fieldConfig": {
@@ -513,7 +513,7 @@
     {
       "datasource": {
         "type": "grafana-azure-monitor-datasource",
-        "uid": "${DS_AZURE_MONITOR}"
+        "uid": "P1EB995EACC6832D3"
       },
       "description": "Network throughput (IO + egress)",
       "fieldConfig": {
@@ -614,7 +614,7 @@
     {
       "datasource": {
         "type": "grafana-azure-monitor-datasource",
-        "uid": "${DS_AZURE_MONITOR}"
+        "uid": "P1EB995EACC6832D3"
       },
       "description": "Connection count over time",
       "fieldConfig": {
@@ -706,7 +706,7 @@
     {
       "datasource": {
         "type": "grafana-azure-monitor-datasource",
-        "uid": "${DS_AZURE_MONITOR}"
+        "uid": "P1EB995EACC6832D3"
       },
       "description": "IOPS (reads + writes)",
       "fieldConfig": {
@@ -797,7 +797,7 @@
     {
       "datasource": {
         "type": "grafana-azure-monitor-datasource",
-        "uid": "${DS_AZURE_MONITOR}"
+        "uid": "P1EB995EACC6832D3"
       },
       "description": "Storage used vs available",
       "fieldConfig": {

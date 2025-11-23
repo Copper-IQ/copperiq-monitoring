@@ -13,6 +13,8 @@ metadata:
     app.kubernetes.io/name: copperiq-monitoring
     app.kubernetes.io/component: dashboard
     app.kubernetes.io/part-of: observability
+  annotations:
+    grafana_folder: {{ $.Values.dashboards.folderName | quote }}
 data:
   {{ base $path }}: |-
 {{ $files.Get $path | indent 4 }}

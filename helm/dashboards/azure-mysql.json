@@ -18,7 +18,7 @@
     {
       "datasource": {
         "type": "grafana-azure-monitor-datasource",
-        "uid": "${DS_AZURE_MONITOR}"
+        "uid": "P1EB995EACC6832D3"
       },
       "description": "CPU usage (80% warning, 90% critical)",
       "fieldConfig": {
@@ -58,7 +58,7 @@
       "type": "gauge"
     },
     {
-      "datasource": {"type": "grafana-azure-monitor-datasource", "uid": "${DS_AZURE_MONITOR}"},
+      "datasource": {"type": "grafana-azure-monitor-datasource", "uid": "P1EB995EACC6832D3"},
       "description": "Memory usage",
       "fieldConfig": {
         "defaults": {
@@ -82,7 +82,7 @@
       "type": "gauge"
     },
     {
-      "datasource": {"type": "grafana-azure-monitor-datasource", "uid": "${DS_AZURE_MONITOR}"},
+      "datasource": {"type": "grafana-azure-monitor-datasource", "uid": "P1EB995EACC6832D3"},
       "description": "Storage usage",
       "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "max": 100, "thresholds": {"steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 80}, {"color": "red", "value": 90}]}, "unit": "percent"}},
       "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0},
@@ -93,7 +93,7 @@
       "type": "gauge"
     },
     {
-      "datasource": {"type": "grafana-azure-monitor-datasource", "uid": "${DS_AZURE_MONITOR}"},
+      "datasource": {"type": "grafana-azure-monitor-datasource", "uid": "P1EB995EACC6832D3"},
       "description": "Active connections",
       "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "unit": "short"}},
       "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0},
