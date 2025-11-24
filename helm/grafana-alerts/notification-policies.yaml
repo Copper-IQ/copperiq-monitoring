@@ -4,14 +4,14 @@ apiVersion: 1
 
 policies:
   - orgId: 1
-    receiver: slack-infra-alerts
+    receiver: grafana-default-email  # Temporarily disabled Slack (uses non-existent receiver)
     group_by: ['alertname', 'cluster', 'namespace']
     group_wait: 30s
     group_interval: 5m
     repeat_interval: 12h
     routes:
-      # Critical and warning alerts - faster notification
-      - receiver: slack-infra-alerts
+      # Critical and warning alerts - faster notification (TEMPORARILY DISABLED)
+      - receiver: grafana-default-email
         matchers:
           - severity =~ "critical|warning"
         continue: false
@@ -19,8 +19,8 @@ policies:
         group_interval: 5m
         repeat_interval: 4h
       
-      # Informational alerts - slower notification
-      - receiver: slack-infra-alerts
+      # Informational alerts - slower notification (TEMPORARILY DISABLED)
+      - receiver: grafana-default-email
         matchers:
           - severity = "info"
         continue: false
