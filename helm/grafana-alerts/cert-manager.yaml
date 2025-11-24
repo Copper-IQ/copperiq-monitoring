@@ -51,7 +51,7 @@ groups:
             datasourceUid: prometheus
             model:
               expr: |
-                max by (name, exported_namespace) (
+                min by (name, exported_namespace) (
                   certmanager_certificate_ready_status{condition="False"}
                 )
               refId: A
