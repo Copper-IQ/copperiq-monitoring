@@ -69,10 +69,16 @@
         {
           "azureMonitor": {
             "metricName": "cpu_percent",
-            "resourceGroup": "$resource_group",
-            "resourceName": "$server_name",
             "metricNamespace": "microsoft.dbformysql/flexibleservers",
-            "aggregation": "Average"
+            "aggregation": "Average",
+            "resources": [
+              {
+                "resourceGroup": "$resource_group",
+                "resourceName": "$server_name"
+              }
+            ],
+            "allowedTimeGrainsMs": [],
+            "timeGrain": "auto"
           },
           "queryType": "Azure Monitor",
           "refId": "A"
@@ -132,10 +138,16 @@
         {
           "azureMonitor": {
             "metricName": "memory_percent",
-            "resourceGroup": "$resource_group",
-            "resourceName": "$server_name",
             "metricNamespace": "microsoft.dbformysql/flexibleservers",
-            "aggregation": "Average"
+            "aggregation": "Average",
+            "resources": [
+              {
+                "resourceGroup": "$resource_group",
+                "resourceName": "$server_name"
+              }
+            ],
+            "allowedTimeGrainsMs": [],
+            "timeGrain": "auto"
           },
           "queryType": "Azure Monitor",
           "refId": "A"
@@ -195,10 +207,16 @@
         {
           "azureMonitor": {
             "metricName": "storage_percent",
-            "resourceGroup": "$resource_group",
-            "resourceName": "$server_name",
             "metricNamespace": "microsoft.dbformysql/flexibleservers",
-            "aggregation": "Average"
+            "aggregation": "Average",
+            "resources": [
+              {
+                "resourceGroup": "$resource_group",
+                "resourceName": "$server_name"
+              }
+            ],
+            "allowedTimeGrainsMs": [],
+            "timeGrain": "auto"
           },
           "queryType": "Azure Monitor",
           "refId": "A"
@@ -242,10 +260,16 @@
         {
           "azureMonitor": {
             "metricName": "active_connections",
-            "resourceGroup": "$resource_group",
-            "resourceName": "$server_name",
             "metricNamespace": "microsoft.dbformysql/flexibleservers",
-            "aggregation": "Average"
+            "aggregation": "Average",
+            "resources": [
+              {
+                "resourceGroup": "$resource_group",
+                "resourceName": "$server_name"
+              }
+            ],
+            "allowedTimeGrainsMs": [],
+            "timeGrain": "auto"
           },
           "queryType": "Azure Monitor",
           "refId": "A"
