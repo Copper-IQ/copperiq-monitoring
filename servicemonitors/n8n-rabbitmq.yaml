@@ -1,0 +1,50 @@
+# ServiceMonitor for RabbitMQ in n8n namespaces
+# Scrapes Prometheus metrics from RabbitMQ port 9419
+apiVersion: v1
+kind: List
+items:
+  # n8n-dev RabbitMQ
+  - apiVersion: monitoring.coreos.com/v1
+    kind: ServiceMonitor
+    metadata:
+      name: rabbitmq
+      namespace: n8n-dev
+      labels:
+        app.kubernetes.io/name: rabbitmq
+        app.kubernetes.io/component: metrics
+    spec:
+      selector:
+        matchLabels:
+          app.kubernetes.io/name: rabbitmq
+          app.kubernetes.io/instance: rabbitmq
+      endpoints:
+        - port: metrics
+          path: /metrics
+          interval: 30s
+          scrapeTimeout: 10s
+      namespaceSelector:
+        matchNames:
+          - n8n-dev
+  
+  # n8n-prod RabbitMQ
+  - apiVersion: monitoring.coreos.com/v1
+    kind: ServiceMonitor
+    metadata:
+      name: rabbitmq
+      namespace: n8n-prod
+      labels:
+        app.kubernetes.io/name: rabbitmq
+        app.kubernetes.io/component: metrics
+    spec:
+      selector:
+        matchLabels:
+          app.kubernetes.io/name: rabbitmq
+          app.kubernetes.io/instance: rabbitmq
+      endpoints:
+        - port: metrics
+          path: /metrics
+          interval: 30s
+          scrapeTimeout: 10s
+      namespaceSelector:
+        matchNames:
+          - n8n-prod

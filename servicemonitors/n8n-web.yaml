@@ -1,0 +1,50 @@
+# ServiceMonitor for n8n web application
+# Scrapes metrics from n8n master pods in both dev and prod
+apiVersion: v1
+kind: List
+items:
+  # n8n-dev web
+  - apiVersion: monitoring.coreos.com/v1
+    kind: ServiceMonitor
+    metadata:
+      name: n8n-web
+      namespace: n8n-dev
+      labels:
+        app.kubernetes.io/name: n8n
+        app.kubernetes.io/component: web
+    spec:
+      selector:
+        matchLabels:
+          app.kubernetes.io/name: n8n
+          app.kubernetes.io/instance: n8n-dev
+      endpoints:
+        - port: http
+          path: /metrics
+          interval: 30s
+          scrapeTimeout: 10s
+      namespaceSelector:
+        matchNames:
+          - n8n-dev
+  
+  # n8n-prod web
+  - apiVersion: monitoring.coreos.com/v1
+    kind: ServiceMonitor
+    metadata:
+      name: n8n-web
+      namespace: n8n-prod
+      labels:
+        app.kubernetes.io/name: n8n
+        app.kubernetes.io/component: web
+    spec:
+      selector:
+        matchLabels:
+          app.kubernetes.io/name: n8n
+          app.kubernetes.io/instance: n8n
+      endpoints:
+        - port: http
+          path: /metrics
+          interval: 30s
+          scrapeTimeout: 10s
+      namespaceSelector:
+        matchNames:
+          - n8n-prod

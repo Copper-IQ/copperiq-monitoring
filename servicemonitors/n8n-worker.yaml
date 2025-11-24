@@ -1,0 +1,52 @@
+# PodMonitor for n8n worker pods
+# Scrapes metrics directly from worker pods (no service)
+apiVersion: v1
+kind: List
+items:
+  # n8n-dev workers
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PodMonitor
+    metadata:
+      name: n8n-worker
+      namespace: n8n-dev
+      labels:
+        app.kubernetes.io/name: n8n
+        app.kubernetes.io/component: worker
+    spec:
+      selector:
+        matchLabels:
+          app.kubernetes.io/name: n8n
+          app.kubernetes.io/instance: n8n-dev
+          app.kubernetes.io/type: worker
+      podMetricsEndpoints:
+        - port: http
+          path: /metrics
+          interval: 30s
+          scrapeTimeout: 10s
+      namespaceSelector:
+        matchNames:
+          - n8n-dev
+  
+  # n8n-prod workers
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PodMonitor
+    metadata:
+      name: n8n-worker
+      namespace: n8n-prod
+      labels:
+        app.kubernetes.io/name: n8n
+        app.kubernetes.io/component: worker
+    spec:
+      selector:
+        matchLabels:
+          app.kubernetes.io/name: n8n
+          app.kubernetes.io/instance: n8n
+          app.kubernetes.io/type: worker
+      podMetricsEndpoints:
+        - port: http
+          path: /metrics
+          interval: 30s
+          scrapeTimeout: 10s
+      namespaceSelector:
+        matchNames:
+          - n8n-prod
