@@ -66,8 +66,9 @@
       },
       "targets": [
         {
-          "expr": "n8n_active_workflow_count{namespace=\"$namespace\"}",
-          "refId": "A"
+          "expr": "max(n8n_active_workflow_count{namespace=\"$namespace\"})",
+          "refId": "A",
+          "legendFormat": ""
         }
       ],
       "gridPos": {
@@ -87,7 +88,7 @@
         },
         "justifyMode": "center",
         "graphMode": "area",
-        "textMode": "value_and_name",
+        "textMode": "value",
         "colorMode": "value"
       },
       "datasource": {
@@ -129,8 +130,9 @@
       },
       "targets": [
         {
-          "expr": "n8n_scaling_mode_queue_jobs_waiting{namespace=\"$namespace\"}",
-          "refId": "A"
+          "expr": "max(n8n_scaling_mode_queue_jobs_waiting{namespace=\"$namespace\"})",
+          "refId": "A",
+          "legendFormat": ""
         }
       ],
       "gridPos": {
@@ -150,7 +152,7 @@
         },
         "justifyMode": "center",
         "graphMode": "area",
-        "textMode": "value_and_name",
+        "textMode": "value",
         "colorMode": "value"
       },
       "datasource": {
@@ -192,8 +194,9 @@
       },
       "targets": [
         {
-          "expr": "n8n_scaling_mode_queue_jobs_active{namespace=\"$namespace\"}",
-          "refId": "A"
+          "expr": "max(n8n_scaling_mode_queue_jobs_active{namespace=\"$namespace\"})",
+          "refId": "A",
+          "legendFormat": ""
         }
       ],
       "gridPos": {
@@ -213,7 +216,7 @@
         },
         "justifyMode": "center",
         "graphMode": "area",
-        "textMode": "value_and_name",
+        "textMode": "value",
         "colorMode": "value"
       },
       "datasource": {
@@ -276,7 +279,7 @@
         },
         "justifyMode": "center",
         "graphMode": "none",
-        "textMode": "value_and_name",
+        "textMode": "value",
         "colorMode": "value"
       },
       "datasource": {
@@ -339,7 +342,7 @@
         },
         "justifyMode": "center",
         "graphMode": "area",
-        "textMode": "value_and_name",
+        "textMode": "value",
         "colorMode": "value"
       },
       "datasource": {
