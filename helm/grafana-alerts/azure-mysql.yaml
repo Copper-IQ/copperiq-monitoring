@@ -1,5 +1,5 @@
 # Grafana Unified Alerting Rules: azure-mysql
-# Converted from PrometheusRule: azure-mysql-alerts
+# FIXED: Using Azure Monitor datasource with correct metric names
 apiVersion: 1
 groups:
   - orgId: 1
@@ -11,7 +11,7 @@ groups:
         title: AzureMySQLHighCPU
         condition: C
         for: 10m
-        noDataState: OK
+        noDataState: Alerting
         execErrState: Alerting
         annotations:
           summary: MySQL server {{ $labels.server_name }} CPU > 80%

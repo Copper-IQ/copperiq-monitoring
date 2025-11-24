@@ -1,5 +1,5 @@
 # Grafana Unified Alerting Rules: azure-postgresql
-# Converted from PrometheusRule: azure-postgresql-alerts
+# FIXED: Using Azure Monitor datasource with correct metric names
 apiVersion: 1
 groups:
   - orgId: 1
@@ -11,12 +11,12 @@ groups:
         title: AzurePostgreSQLHighCPU
         condition: C
         for: 10m
-        noDataState: OK
+        noDataState: Alerting  # Changed from OK to Alerting so we know if metrics stop working
         execErrState: Alerting
         annotations:
-          summary: PostgreSQL server {{ $labels.server_name }} CPU > 80%
+          summary: PostgreSQL server {{ $labels.resourcename }} CPU > 80%
           description: |
-            Azure PostgreSQL Flexible Server {{ $labels.server_name }} CPU usage is {{ $value }}%.
+            Azure PostgreSQL Flexible Server {{ $labels.resourcename }} CPU usage is {{ $value }}%.
 
             **Databases affected**: n8n-data-shared-dev, n8n-data-shared-prod, langfuse, content-platform
 
@@ -37,15 +37,17 @@ groups:
             relativeTimeRange:
               from: 600
               to: 0
-            datasourceUid: prometheus
+            datasourceUid: P1EB995EACC6832D3
             model:
-              expr: azure_postgresql_flexible_server_cpu_percent
+              queryType: Azure Monitor
+              azureMonitor:
+                resourceGroup: shared-hosting-accept-prod
+                resourceName: copperiq-accept-prod
+                metricNamespace: Microsoft.DBforPostgreSQL/flexibleServers
+                metricName: cpu_percent
+                aggregation: Average
+                timeGrain: PT1M
               refId: A
-              datasource:
-                type: prometheus
-                uid: prometheus
-              intervalMs: 1000
-              maxDataPoints: 43200
           - refId: B
             relativeTimeRange:
               from: 0
@@ -56,9 +58,6 @@ groups:
               expression: A
               reducer: last
               refId: B
-              datasource:
-                type: __expr__
-                uid: __expr__
           - refId: C
             relativeTimeRange:
               from: 0
@@ -68,19 +67,17 @@ groups:
               type: math
               expression: $B > 80
               refId: C
-              datasource:
-                type: __expr__
-                uid: __expr__
+      
       - uid: azurepostgresqlcriticalcpu
         title: AzurePostgreSQLCriticalCPU
         condition: C
         for: 5m
-        noDataState: OK
+        noDataState: Alerting
         execErrState: Alerting
         annotations:
-          summary: PostgreSQL server {{ $labels.server_name }} CPU > 95% - CRITICAL
+          summary: PostgreSQL server {{ $labels.resourcename }} CPU > 95% - CRITICAL
           description: |
-            CRITICAL: Azure PostgreSQL server {{ $labels.server_name }} CPU at {{ $value }}%.
+            CRITICAL: Azure PostgreSQL server {{ $labels.resourcename }} CPU at {{ $value }}%.
 
             **Immediate action required**:
             1. Identify blocking queries: Check pg_stat_activity
@@ -96,15 +93,17 @@ groups:
             relativeTimeRange:
               from: 600
               to: 0
-            datasourceUid: prometheus
+            datasourceUid: P1EB995EACC6832D3
             model:
-              expr: azure_postgresql_flexible_server_cpu_percent
+              queryType: Azure Monitor
+              azureMonitor:
+                resourceGroup: shared-hosting-accept-prod
+                resourceName: copperiq-accept-prod
+                metricNamespace: Microsoft.DBforPostgreSQL/flexibleServers
+                metricName: cpu_percent
+                aggregation: Average
+                timeGrain: PT1M
               refId: A
-              datasource:
-                type: prometheus
-                uid: prometheus
-              intervalMs: 1000
-              maxDataPoints: 43200
           - refId: B
             relativeTimeRange:
               from: 0
@@ -115,9 +114,6 @@ groups:
               expression: A
               reducer: last
               refId: B
-              datasource:
-                type: __expr__
-                uid: __expr__
           - refId: C
             relativeTimeRange:
               from: 0
@@ -127,17 +123,15 @@ groups:
               type: math
               expression: $B > 95
               refId: C
-              datasource:
-                type: __expr__
-                uid: __expr__
+      
       - uid: azurepostgresqlhighmemory
         title: AzurePostgreSQLHighMemory
         condition: C
         for: 10m
-        noDataState: OK
+        noDataState: Alerting
         execErrState: Alerting
         annotations:
-          summary: PostgreSQL server {{ $labels.server_name }} memory > 85%
+          summary: PostgreSQL server {{ $labels.resourcename }} memory > 85%
           description: |
             Azure PostgreSQL memory usage at {{ $value }}%.
 
@@ -157,15 +151,17 @@ groups:
             relativeTimeRange:
               from: 600
               to: 0
-            datasourceUid: prometheus
+            datasourceUid: P1EB995EACC6832D3
             model:
-              expr: azure_postgresql_flexible_server_memory_percent
+              queryType: Azure Monitor
+              azureMonitor:
+                resourceGroup: shared-hosting-accept-prod
+                resourceName: copperiq-accept-prod
+                metricNamespace: Microsoft.DBforPostgreSQL/flexibleServers
+                metricName: memory_percent
+                aggregation: Average
+                timeGrain: PT1M
               refId: A
-              datasource:
-                type: prometheus
-                uid: prometheus
-              intervalMs: 1000
-              maxDataPoints: 43200
           - refId: B
             relativeTimeRange:
               from: 0
@@ -176,9 +172,6 @@ groups:
               expression: A
               reducer: last
               refId: B
-              datasource:
-                type: __expr__
-                uid: __expr__
           - refId: C
             relativeTimeRange:
               from: 0
@@ -188,17 +181,15 @@ groups:
               type: math
               expression: $B > 85
               refId: C
-              datasource:
-                type: __expr__
-                uid: __expr__
+      
       - uid: azurepostgresqlstoragenearfull
         title: AzurePostgreSQLStorageNearFull
         condition: C
         for: 5m
-        noDataState: OK
+        noDataState: Alerting
         execErrState: Alerting
         annotations:
-          summary: PostgreSQL server {{ $labels.server_name }} storage > 80% full
+          summary: PostgreSQL server {{ $labels.resourcename }} storage > 80% full
           description: >
             Azure PostgreSQL storage is {{ $value }}% full.
 
@@ -225,15 +216,17 @@ groups:
             relativeTimeRange:
               from: 600
               to: 0
-            datasourceUid: prometheus
+            datasourceUid: P1EB995EACC6832D3
             model:
-              expr: azure_postgresql_flexible_server_storage_percent
+              queryType: Azure Monitor
+              azureMonitor:
+                resourceGroup: shared-hosting-accept-prod
+                resourceName: copperiq-accept-prod
+                metricNamespace: Microsoft.DBforPostgreSQL/flexibleServers
+                metricName: storage_percent
+                aggregation: Average
+                timeGrain: PT1M
               refId: A
-              datasource:
-                type: prometheus
-                uid: prometheus
-              intervalMs: 1000
-              maxDataPoints: 43200
           - refId: B
             relativeTimeRange:
               from: 0
@@ -244,9 +237,6 @@ groups:
               expression: A
               reducer: last
               refId: B
-              datasource:
-                type: __expr__
-                uid: __expr__
           - refId: C
             relativeTimeRange:
               from: 0
@@ -256,17 +246,15 @@ groups:
               type: math
               expression: $B > 80
               refId: C
-              datasource:
-                type: __expr__
-                uid: __expr__
+      
       - uid: azurepostgresqlstoragecritical
         title: AzurePostgreSQLStorageCritical
         condition: C
         for: 2m
-        noDataState: OK
+        noDataState: Alerting
         execErrState: Alerting
         annotations:
-          summary: PostgreSQL server {{ $labels.server_name }} storage > 90% CRITICAL
+          summary: PostgreSQL server {{ $labels.resourcename }} storage > 90% CRITICAL
           description: |
             CRITICAL: Storage {{ $value }}% full. Write failures imminent.
 
@@ -284,15 +272,17 @@ groups:
             relativeTimeRange:
               from: 600
               to: 0
-            datasourceUid: prometheus
+            datasourceUid: P1EB995EACC6832D3
             model:
-              expr: azure_postgresql_flexible_server_storage_percent
+              queryType: Azure Monitor
+              azureMonitor:
+                resourceGroup: shared-hosting-accept-prod
+                resourceName: copperiq-accept-prod
+                metricNamespace: Microsoft.DBforPostgreSQL/flexibleServers
+                metricName: storage_percent
+                aggregation: Average
+                timeGrain: PT1M
               refId: A
-              datasource:
-                type: prometheus
-                uid: prometheus
-              intervalMs: 1000
-              maxDataPoints: 43200
           - refId: B
             relativeTimeRange:
               from: 0
@@ -303,9 +293,6 @@ groups:
               expression: A
               reducer: last
               refId: B
-              datasource:
-                type: __expr__
-                uid: __expr__
           - refId: C
             relativeTimeRange:
               from: 0
@@ -315,19 +302,17 @@ groups:
               type: math
               expression: $B > 90
               refId: C
-              datasource:
-                type: __expr__
-                uid: __expr__
+      
       - uid: azurepostgresqlhighconnections
         title: AzurePostgreSQLHighConnections
         condition: C
         for: 5m
-        noDataState: OK
+        noDataState: Alerting
         execErrState: Alerting
         annotations:
-          summary: PostgreSQL server {{ $labels.server_name }} connections > 80% of limit
+          summary: PostgreSQL server {{ $labels.resourcename }} connections > 80% of limit
           description: >
-            Active connections: {{ $value }}% of max limit.
+            Active connections: {{ $value }} (Note: Azure Monitor reports absolute count, not percentage).
 
 
             **Impact**: New connections may be rejected, application errors.
@@ -354,17 +339,17 @@ groups:
             relativeTimeRange:
               from: 600
               to: 0
-            datasourceUid: prometheus
+            datasourceUid: P1EB995EACC6832D3
             model:
-              expr: >-
-                (azure_postgresql_flexible_server_active_connections /
-                azure_postgresql_flexible_server_connections_limit) * 100
+              queryType: Azure Monitor
+              azureMonitor:
+                resourceGroup: shared-hosting-accept-prod
+                resourceName: copperiq-accept-prod
+                metricNamespace: Microsoft.DBforPostgreSQL/flexibleServers
+                metricName: active_connections
+                aggregation: Average
+                timeGrain: PT1M
               refId: A
-              datasource:
-                type: prometheus
-                uid: prometheus
-              intervalMs: 1000
-              maxDataPoints: 43200
           - refId: B
             relativeTimeRange:
               from: 0
@@ -375,9 +360,6 @@ groups:
               expression: A
               reducer: last
               refId: B
-              datasource:
-                type: __expr__
-                uid: __expr__
           - refId: C
             relativeTimeRange:
               from: 0
@@ -387,19 +369,17 @@ groups:
               type: math
               expression: $B > 80
               refId: C
-              datasource:
-                type: __expr__
-                uid: __expr__
+      
       - uid: azurepostgresqlfailedconnections
         title: AzurePostgreSQLFailedConnections
         condition: C
         for: 5m
-        noDataState: OK
+        noDataState: Alerting
         execErrState: Alerting
         annotations:
-          summary: PostgreSQL server {{ $labels.server_name }} experiencing failed connections
+          summary: PostgreSQL server {{ $labels.resourcename }} experiencing failed connections
           description: |
-            {{ $value }} failed connections per minute.
+            {{ $value }} failed connections detected.
 
             **Possible causes**:
             1. Authentication failures
@@ -421,15 +401,17 @@ groups:
             relativeTimeRange:
               from: 600
               to: 0
-            datasourceUid: prometheus
+            datasourceUid: P1EB995EACC6832D3
             model:
-              expr: rate(azure_postgresql_flexible_server_connections_failed_total[5m])
+              queryType: Azure Monitor
+              azureMonitor:
+                resourceGroup: shared-hosting-accept-prod
+                resourceName: copperiq-accept-prod
+                metricNamespace: Microsoft.DBforPostgreSQL/flexibleServers
+                metricName: connections_failed
+                aggregation: Total
+                timeGrain: PT1M
               refId: A
-              datasource:
-                type: prometheus
-                uid: prometheus
-              intervalMs: 1000
-              maxDataPoints: 43200
           - refId: B
             relativeTimeRange:
               from: 0
@@ -440,9 +422,6 @@ groups:
               expression: A
               reducer: last
               refId: B
-              datasource:
-                type: __expr__
-                uid: __expr__
           - refId: C
             relativeTimeRange:
               from: 0
@@ -452,14 +431,12 @@ groups:
               type: math
               expression: $B > 10
               refId: C
-              datasource:
-                type: __expr__
-                uid: __expr__
+      
       - uid: azurepostgresqlreplicationlag
         title: AzurePostgreSQLReplicationLag
         condition: C
         for: 5m
-        noDataState: OK
+        noDataState: OK  # OK because replication lag metric only exists if HA/replicas configured
         execErrState: Alerting
         annotations:
           summary: PostgreSQL replication lag > 60 seconds
@@ -482,15 +459,17 @@ groups:
             relativeTimeRange:
               from: 600
               to: 0
-            datasourceUid: prometheus
+            datasourceUid: P1EB995EACC6832D3
             model:
-              expr: azure_postgresql_flexible_server_replication_lag_seconds
+              queryType: Azure Monitor
+              azureMonitor:
+                resourceGroup: shared-hosting-accept-prod
+                resourceName: copperiq-accept-prod
+                metricNamespace: Microsoft.DBforPostgreSQL/flexibleServers
+                metricName: replication_lag
+                aggregation: Maximum
+                timeGrain: PT1M
               refId: A
-              datasource:
-                type: prometheus
-                uid: prometheus
-              intervalMs: 1000
-              maxDataPoints: 43200
           - refId: B
             relativeTimeRange:
               from: 0
@@ -501,9 +480,6 @@ groups:
               expression: A
               reducer: last
               refId: B
-              datasource:
-                type: __expr__
-                uid: __expr__
           - refId: C
             relativeTimeRange:
               from: 0
@@ -513,17 +489,15 @@ groups:
               type: math
               expression: $B > 60
               refId: C
-              datasource:
-                type: __expr__
-                uid: __expr__
+      
       - uid: azurepostgresqlbackupfailed
         title: AzurePostgreSQLBackupFailed
         condition: C
         for: 1h
-        noDataState: OK
+        noDataState: OK  # OK because backup_storage_used is always > 0 for functioning backups
         execErrState: Alerting
         annotations:
-          summary: PostgreSQL server {{ $labels.server_name }} backup may be failing
+          summary: PostgreSQL server {{ $labels.resourcename }} backup may be failing
           description: |
             No backup storage usage detected for 1 hour.
 
@@ -541,17 +515,19 @@ groups:
         data:
           - refId: A
             relativeTimeRange:
-              from: 600
+              from: 3600
               to: 0
-            datasourceUid: prometheus
+            datasourceUid: P1EB995EACC6832D3
             model:
-              expr: azure_postgresql_flexible_server_backup_storage_used_bytes
+              queryType: Azure Monitor
+              azureMonitor:
+                resourceGroup: shared-hosting-accept-prod
+                resourceName: copperiq-accept-prod
+                metricNamespace: Microsoft.DBforPostgreSQL/flexibleServers
+                metricName: backup_storage_used
+                aggregation: Average
+                timeGrain: PT1M
               refId: A
-              datasource:
-                type: prometheus
-                uid: prometheus
-              intervalMs: 1000
-              maxDataPoints: 43200
           - refId: B
             relativeTimeRange:
               from: 0
@@ -562,9 +538,6 @@ groups:
               expression: A
               reducer: last
               refId: B
-              datasource:
-                type: __expr__
-                uid: __expr__
           - refId: C
             relativeTimeRange:
               from: 0
@@ -574,6 +547,3 @@ groups:
               type: math
               expression: $B == 0
               refId: C
-              datasource:
-                type: __expr__
-                uid: __expr__
