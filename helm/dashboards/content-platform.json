@@ -962,5 +962,6 @@
   "title": "Content Platform",
   "uid": "content-platform",
   "version": 1,
-  "weekStart": "monday"
+  "weekStart": "monday",
+  "folderUid": "applications"
 }

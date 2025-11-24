@@ -1043,5 +1043,6 @@
   "title": "Azure PostgreSQL",
   "uid": "azure-postgresql",
   "version": 1,
-  "weekStart": "monday"
+  "weekStart": "monday",
+  "folderUid": "databases"
 }

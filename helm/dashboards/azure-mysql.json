@@ -336,5 +336,6 @@
   "timezone": "Europe/Amsterdam",
   "title": "Azure MySQL (Risers App)",
   "uid": "azure-mysql",
-  "version": 1
+  "version": 1,
+  "folderUid": "databases"
 }

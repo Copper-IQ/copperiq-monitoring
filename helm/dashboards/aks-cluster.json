@@ -1048,5 +1048,6 @@
   "title": "AKS Cluster",
   "uid": "aks-cluster",
   "version": 1,
-  "weekStart": "monday"
+  "weekStart": "monday",
+  "folderUid": "infrastructure"
 }

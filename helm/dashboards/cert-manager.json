@@ -1,74 +1,307 @@
 {
-  "annotations": {"list": []},
+  "annotations": {
+    "list": []
+  },
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
   "id": null,
-  "links": [{"title": "Back to Overview", "type": "link", "url": "/d/infrastructure-overview"}],
+  "links": [
+    {
+      "title": "Back to Overview",
+      "type": "link",
+      "url": "/d/infrastructure-overview"
+    }
+  ],
   "liveNow": false,
   "panels": [
     {
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "description": "Certificates expiring soon (<30 days)",
-      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "custom": {"align": "left"}, "thresholds": {"steps": [{"color": "red", "value": null}, {"color": "yellow", "value": 604800}, {"color": "green", "value": 2592000}]}, "unit": "dtdurations"}},
-      "gridPos": {"h": 12, "w": 24, "x": 0, "y": 0},
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left"
+          },
+          "thresholds": {
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 604800
+              },
+              {
+                "color": "green",
+                "value": 2592000
+              }
+            ]
+          },
+          "unit": "dtdurations"
+        }
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
       "id": 1,
-      "options": {"cellHeight": "sm", "showHeader": true, "sortBy": [{"desc": false, "displayName": "Expires In"}]},
-      "targets": [{"expr": "certmanager_certificate_expiration_timestamp_seconds - time()", "format": "table", "instant": true, "refId": "A"}],
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Expires In"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "expr": "certmanager_certificate_expiration_timestamp_seconds - time()",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
       "title": "Certificate Expiry (<30 days)",
       "transformations": [
-        {"id": "organize", "options": {"excludeByName": {"Time": true, "__name__": true, "instance": true, "job": true, "service": true}, "renameByName": {"name": "Certificate", "namespace": "Namespace", "Value": "Expires In"}}},
-        {"id": "filterByValue", "options": {"filters": [{"config": {"id": "lower", "options": {"value": 2592000}}, "fieldName": "Expires In"}], "match": "any", "type": "include"}}
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "instance": true,
+              "job": true,
+              "service": true
+            },
+            "renameByName": {
+              "name": "Certificate",
+              "namespace": "Namespace",
+              "Value": "Expires In"
+            }
+          }
+        },
+        {
+          "id": "filterByValue",
+          "options": {
+            "filters": [
+              {
+                "config": {
+                  "id": "lower",
+                  "options": {
+                    "value": 2592000
+                  }
+                },
+                "fieldName": "Expires In"
+              }
+            ],
+            "match": "any",
+            "type": "include"
+          }
+        }
       ],
       "type": "table"
     },
     {
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "description": "Certificate readiness status",
-      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}}},
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          }
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 12
+      },
       "id": 2,
-      "options": {"displayLabels": ["name", "value"], "legend": {"displayMode": "table", "placement": "right", "values": ["value"]}, "pieType": "pie"},
-      "targets": [{"expr": "count by (condition) (certmanager_certificate_ready_status)", "legendFormat": "{{condition}}", "refId": "A"}],
+      "options": {
+        "displayLabels": [
+          "name",
+          "value"
+        ],
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": [
+            "value"
+          ]
+        },
+        "pieType": "pie"
+      },
+      "targets": [
+        {
+          "expr": "count by (condition) (certmanager_certificate_ready_status)",
+          "legendFormat": "{{condition}}",
+          "refId": "A"
+        }
+      ],
       "title": "Certificate Status",
       "type": "piechart"
     },
     {
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "description": "ACME challenge processing status",
-      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "unit": "short"}},
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 12
+      },
       "id": 3,
-      "options": {"legend": {"calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom"}},
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      },
       "targets": [
-        {"expr": "certmanager_http_acme_client_request_count", "legendFormat": "HTTP Requests", "refId": "A"},
-        {"expr": "rate(certmanager_http_acme_client_request_duration_seconds_sum[5m]) / rate(certmanager_http_acme_client_request_duration_seconds_count[5m])", "legendFormat": "Avg Duration", "refId": "B"}
+        {
+          "expr": "certmanager_http_acme_client_request_count",
+          "legendFormat": "HTTP Requests",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(certmanager_http_acme_client_request_duration_seconds_sum[5m]) / rate(certmanager_http_acme_client_request_duration_seconds_count[5m])",
+          "legendFormat": "Avg Duration",
+          "refId": "B"
+        }
       ],
       "title": "ACME Challenge Activity",
       "type": "timeseries"
     },
     {
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "description": "Controller sync operations (success and errors)",
-      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "unit": "ops"}},
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20},
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "ops"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 20
+      },
       "id": 4,
-      "options": {"legend": {"calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom"}},
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      },
       "targets": [
-        {"expr": "rate(certmanager_controller_sync_call_count[5m])", "legendFormat": "{{controller}} - Syncs", "refId": "A"},
-        {"expr": "rate(certmanager_controller_sync_error_count[5m])", "legendFormat": "{{controller}} - Errors", "refId": "B"}
+        {
+          "expr": "rate(certmanager_controller_sync_call_count[5m])",
+          "legendFormat": "{{controller}} - Syncs",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(certmanager_controller_sync_error_count[5m])",
+          "legendFormat": "{{controller}} - Errors",
+          "refId": "B"
+        }
       ],
       "title": "Controller Sync Activity",
       "type": "timeseries"
     },
     {
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "description": "Time until next certificate renewal (30 days before expiry)",
-      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "thresholds": {"steps": [{"color": "red", "value": 0}, {"color": "yellow", "value": 86400}, {"color": "green", "value": 604800}]}, "unit": "dtdurations"}},
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20},
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "steps": [
+              {
+                "color": "red",
+                "value": 0
+              },
+              {
+                "color": "yellow",
+                "value": 86400
+              },
+              {
+                "color": "green",
+                "value": 604800
+              }
+            ]
+          },
+          "unit": "dtdurations"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 20
+      },
       "id": 5,
-      "options": {"legend": {"calcs": ["min", "mean"], "displayMode": "table", "placement": "bottom"}},
-      "targets": [{"expr": "certmanager_certificate_renewal_timestamp_seconds - time()", "legendFormat": "{{namespace}}/{{name}}", "refId": "A"}],
+      "options": {
+        "legend": {
+          "calcs": [
+            "min",
+            "mean"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "expr": "certmanager_certificate_renewal_timestamp_seconds - time()",
+          "legendFormat": "{{namespace}}/{{name}}",
+          "refId": "A"
+        }
+      ],
       "title": "Time Until Renewal",
       "type": "timeseries"
     }
@@ -76,11 +309,28 @@
   "refresh": "30s",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["copperiq", "cert-manager", "tls", "security"],
-  "templating": {"list": [{"name": "DS_PROMETHEUS", "type": "datasource", "query": "prometheus"}]},
-  "time": {"from": "now-1h", "to": "now"},
+  "tags": [
+    "copperiq",
+    "cert-manager",
+    "tls",
+    "security"
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "DS_PROMETHEUS",
+        "type": "datasource",
+        "query": "prometheus"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
   "timezone": "Europe/Amsterdam",
   "title": "Cert-Manager",
   "uid": "cert-manager",
-  "version": 1
+  "version": 1,
+  "folderUid": "applications"
 }

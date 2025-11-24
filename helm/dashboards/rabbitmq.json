@@ -982,5 +982,6 @@
   "title": "RabbitMQ",
   "uid": "rabbitmq",
   "version": 1,
-  "weekStart": "monday"
+  "weekStart": "monday",
+  "folderUid": "applications"
 }
