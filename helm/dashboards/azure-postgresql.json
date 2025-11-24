@@ -91,8 +91,10 @@
         {
           "azureMonitor": {
             "metricName": "cpu_percent",
+            "metricNamespace": "microsoft.dbforpostgresql/flexibleservers",
             "resourceGroup": "$resource_group",
             "resourceName": "$server_name",
+            "aggregation": "Average",
             "timeGrain": "auto"
           },
           "queryType": "Azure Monitor",
@@ -161,7 +163,9 @@
             "metricName": "memory_percent",
             "resourceGroup": "$resource_group",
             "resourceName": "$server_name",
-            "timeGrain": "auto"
+            "timeGrain": "auto",
+            "metricNamespace": "microsoft.dbforpostgresql/flexibleservers",
+            "aggregation": "Average"
           },
           "queryType": "Azure Monitor",
           "refId": "A"
@@ -229,7 +233,9 @@
             "metricName": "storage_percent",
             "resourceGroup": "$resource_group",
             "resourceName": "$server_name",
-            "timeGrain": "auto"
+            "timeGrain": "auto",
+            "metricNamespace": "microsoft.dbforpostgresql/flexibleservers",
+            "aggregation": "Average"
           },
           "queryType": "Azure Monitor",
           "refId": "A"
@@ -297,7 +303,9 @@
             "metricName": "active_connections",
             "resourceGroup": "$resource_group",
             "resourceName": "$server_name",
-            "timeGrain": "auto"
+            "timeGrain": "auto",
+            "metricNamespace": "microsoft.dbforpostgresql/flexibleservers",
+            "aggregation": "Average"
           },
           "queryType": "Azure Monitor",
           "refId": "A"
@@ -399,7 +407,9 @@
             "metricName": "cpu_percent",
             "resourceGroup": "$resource_group",
             "resourceName": "$server_name",
-            "timeGrain": "auto"
+            "timeGrain": "auto",
+            "metricNamespace": "microsoft.dbforpostgresql/flexibleservers",
+            "aggregation": "Average"
           },
           "queryType": "Azure Monitor",
           "refId": "A"
@@ -501,7 +511,9 @@
             "metricName": "memory_percent",
             "resourceGroup": "$resource_group",
             "resourceName": "$server_name",
-            "timeGrain": "auto"
+            "timeGrain": "auto",
+            "metricNamespace": "microsoft.dbforpostgresql/flexibleservers",
+            "aggregation": "Average"
           },
           "queryType": "Azure Monitor",
           "refId": "A"
@@ -592,7 +604,9 @@
             "metricName": "network_bytes_ingress",
             "resourceGroup": "$resource_group",
             "resourceName": "$server_name",
-            "timeGrain": "auto"
+            "timeGrain": "auto",
+            "metricNamespace": "microsoft.dbforpostgresql/flexibleservers",
+            "aggregation": "Average"
           },
           "queryType": "Azure Monitor",
           "refId": "A"
@@ -602,7 +616,9 @@
             "metricName": "network_bytes_egress",
             "resourceGroup": "$resource_group",
             "resourceName": "$server_name",
-            "timeGrain": "auto"
+            "timeGrain": "auto",
+            "metricNamespace": "microsoft.dbforpostgresql/flexibleservers",
+            "aggregation": "Average"
           },
           "queryType": "Azure Monitor",
           "refId": "B"
@@ -694,7 +710,9 @@
             "metricName": "active_connections",
             "resourceGroup": "$resource_group",
             "resourceName": "$server_name",
-            "timeGrain": "auto"
+            "timeGrain": "auto",
+            "metricNamespace": "microsoft.dbforpostgresql/flexibleservers",
+            "aggregation": "Average"
           },
           "queryType": "Azure Monitor",
           "refId": "A"
@@ -785,7 +803,9 @@
             "metricName": "iops",
             "resourceGroup": "$resource_group",
             "resourceName": "$server_name",
-            "timeGrain": "auto"
+            "timeGrain": "auto",
+            "metricNamespace": "microsoft.dbforpostgresql/flexibleservers",
+            "aggregation": "Average"
           },
           "queryType": "Azure Monitor",
           "refId": "A"
@@ -876,7 +896,9 @@
             "metricName": "storage_used",
             "resourceGroup": "$resource_group",
             "resourceName": "$server_name",
-            "timeGrain": "auto"
+            "timeGrain": "auto",
+            "metricNamespace": "microsoft.dbforpostgresql/flexibleservers",
+            "aggregation": "Average"
           },
           "queryType": "Azure Monitor",
           "refId": "A"
@@ -918,8 +940,8 @@
       {
         "current": {
           "selected": false,
-          "text": "copperiq-accept",
-          "value": "copperiq-accept"
+          "text": "shared-hosting-accept-prod",
+          "value": "shared-hosting-accept-prod"
         },
         "hide": 0,
         "label": "Resource Group",
@@ -927,11 +949,11 @@
         "options": [
           {
             "selected": true,
-            "text": "copperiq-accept",
-            "value": "copperiq-accept"
+            "text": "shared-hosting-accept-prod",
+            "value": "shared-hosting-accept-prod"
           }
         ],
-        "query": "copperiq-accept",
+        "query": "shared-hosting-accept-prod",
         "skipUrlSync": false,
         "type": "custom"
       },
