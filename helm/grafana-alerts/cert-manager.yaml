@@ -50,7 +50,10 @@ groups:
               to: 0
             datasourceUid: prometheus
             model:
-              expr: certmanager_certificate_ready_status{condition="False"}
+              expr: |
+                max by (name, exported_namespace) (
+                  certmanager_certificate_ready_status{condition="False"}
+                )
               refId: A
               datasource:
                 type: prometheus

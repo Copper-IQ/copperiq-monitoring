@@ -36,15 +36,17 @@ groups:
             relativeTimeRange:
               from: 600
               to: 0
-            datasourceUid: prometheus
+            datasourceUid: P1EB995EACC6832D3
             model:
-              expr: azure_mysql_flexible_server_cpu_percent
+              queryType: Azure Monitor
+              azureMonitor:
+                resourceGroup: shared-hosting-accept-prod
+                resourceName: copperiq-accept-prod-mysql
+                metricNamespace: Microsoft.DBforMySQL/flexibleServers
+                metricName: cpu_percent
+                aggregation: Average
+                timeGrain: PT1M
               refId: A
-              datasource:
-                type: prometheus
-                uid: prometheus
-              intervalMs: 1000
-              maxDataPoints: 43200
           - refId: B
             relativeTimeRange:
               from: 0
@@ -74,7 +76,7 @@ groups:
         title: AzureMySQLHighMemory
         condition: C
         for: 10m
-        noDataState: OK
+        noDataState: Alerting
         execErrState: Alerting
         annotations:
           summary: MySQL server {{ $labels.server_name }} memory > 85%
@@ -97,15 +99,17 @@ groups:
             relativeTimeRange:
               from: 600
               to: 0
-            datasourceUid: prometheus
+            datasourceUid: P1EB995EACC6832D3
             model:
-              expr: azure_mysql_flexible_server_memory_percent
+              queryType: Azure Monitor
+              azureMonitor:
+                resourceGroup: shared-hosting-accept-prod
+                resourceName: copperiq-accept-prod-mysql
+                metricNamespace: Microsoft.DBforMySQL/flexibleServers
+                metricName: memory_percent
+                aggregation: Average
+                timeGrain: PT1M
               refId: A
-              datasource:
-                type: prometheus
-                uid: prometheus
-              intervalMs: 1000
-              maxDataPoints: 43200
           - refId: B
             relativeTimeRange:
               from: 0
@@ -135,7 +139,7 @@ groups:
         title: AzureMySQLStorageNearFull
         condition: C
         for: 5m
-        noDataState: OK
+        noDataState: Alerting
         execErrState: Alerting
         annotations:
           summary: MySQL server {{ $labels.server_name }} storage > 80% full
@@ -158,15 +162,17 @@ groups:
             relativeTimeRange:
               from: 600
               to: 0
-            datasourceUid: prometheus
+            datasourceUid: P1EB995EACC6832D3
             model:
-              expr: azure_mysql_flexible_server_storage_percent
+              queryType: Azure Monitor
+              azureMonitor:
+                resourceGroup: shared-hosting-accept-prod
+                resourceName: copperiq-accept-prod-mysql
+                metricNamespace: Microsoft.DBforMySQL/flexibleServers
+                metricName: storage_percent
+                aggregation: Average
+                timeGrain: PT1M
               refId: A
-              datasource:
-                type: prometheus
-                uid: prometheus
-              intervalMs: 1000
-              maxDataPoints: 43200
           - refId: B
             relativeTimeRange:
               from: 0
@@ -196,7 +202,7 @@ groups:
         title: AzureMySQLHighConnections
         condition: C
         for: 5m
-        noDataState: OK
+        noDataState: Alerting
         execErrState: Alerting
         annotations:
           summary: MySQL server {{ $labels.server_name }} connections > 80% of limit
@@ -219,15 +225,17 @@ groups:
             relativeTimeRange:
               from: 600
               to: 0
-            datasourceUid: prometheus
+            datasourceUid: P1EB995EACC6832D3
             model:
-              expr: (azure_mysql_flexible_server_active_connections / azure_mysql_flexible_server_connections_limit) * 100
+              queryType: Azure Monitor
+              azureMonitor:
+                resourceGroup: shared-hosting-accept-prod
+                resourceName: copperiq-accept-prod-mysql
+                metricNamespace: Microsoft.DBforMySQL/flexibleServers
+                metricName: active_connections
+                aggregation: Average
+                timeGrain: PT1M
               refId: A
-              datasource:
-                type: prometheus
-                uid: prometheus
-              intervalMs: 1000
-              maxDataPoints: 43200
           - refId: B
             relativeTimeRange:
               from: 0
@@ -257,12 +265,12 @@ groups:
         title: AzureMySQLAbortedConnections
         condition: C
         for: 5m
-        noDataState: OK
+        noDataState: Alerting
         execErrState: Alerting
         annotations:
           summary: MySQL server {{ $labels.server_name }} high aborted connections
           description: |
-            {{ $value }} aborted connections per minute.
+            {{ $value }} total aborted connections.
 
             **Possible causes**:
             1. Network issues
@@ -284,15 +292,17 @@ groups:
             relativeTimeRange:
               from: 600
               to: 0
-            datasourceUid: prometheus
+            datasourceUid: P1EB995EACC6832D3
             model:
-              expr: rate(azure_mysql_flexible_server_aborted_connections_total[5m])
+              queryType: Azure Monitor
+              azureMonitor:
+                resourceGroup: shared-hosting-accept-prod
+                resourceName: copperiq-accept-prod-mysql
+                metricNamespace: Microsoft.DBforMySQL/flexibleServers
+                metricName: aborted_connections
+                aggregation: Total
+                timeGrain: PT5M
               refId: A
-              datasource:
-                type: prometheus
-                uid: prometheus
-              intervalMs: 1000
-              maxDataPoints: 43200
           - refId: B
             relativeTimeRange:
               from: 0
@@ -322,7 +332,7 @@ groups:
         title: AzureMySQLReplicationLag
         condition: C
         for: 5m
-        noDataState: OK
+        noDataState: Alerting
         execErrState: Alerting
         annotations:
           summary: MySQL replication lag > 60 seconds
@@ -345,15 +355,17 @@ groups:
             relativeTimeRange:
               from: 600
               to: 0
-            datasourceUid: prometheus
+            datasourceUid: P1EB995EACC6832D3
             model:
-              expr: azure_mysql_flexible_server_replication_lag_seconds
+              queryType: Azure Monitor
+              azureMonitor:
+                resourceGroup: shared-hosting-accept-prod
+                resourceName: copperiq-accept-prod-mysql
+                metricNamespace: Microsoft.DBforMySQL/flexibleServers
+                metricName: replication_lag
+                aggregation: Maximum
+                timeGrain: PT1M
               refId: A
-              datasource:
-                type: prometheus
-                uid: prometheus
-              intervalMs: 1000
-              maxDataPoints: 43200
           - refId: B
             relativeTimeRange:
               from: 0
