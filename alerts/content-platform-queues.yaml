@@ -168,3 +168,64 @@ spec:
               3. Verify RabbitMQ connection: `kubectl exec -n {{ $labels.namespace }} rabbitmq-0 -- rabbitmqctl list_connections`
               4. Restart workers if needed: `kubectl rollout restart deployment -n {{ $labels.namespace }} -l app contains worker`
             runbook_url: "https://github.com/Copper-IQ/copperiq-monitoring/blob/main/docs/runbooks/content-platform-queue-backlog.md"
+
+        - alert: ContentPlatformQueuePilingUp
+          expr: |
+            (
+              rate(rabbitmq_queue_messages_published_total{namespace=~"n8n-(dev|prod)"}[5m])
+              -
+              rate(rabbitmq_queue_messages_delivered_total{namespace=~"n8n-(dev|prod)"}[5m])
+            ) > 0.1
+          for: 10m
+          labels:
+            severity: warning
+            component: content-platform
+            category: application
+          annotations:
+            summary: "Content Platform queue {{ $labels.queue }} is piling up"
+            description: |
+              Queue {{ $labels.queue }} in {{ $labels.namespace }} has incoming rate > processing rate.
+              
+              **Rate imbalance**: {{ $value | humanize }} msg/s (positive = adding faster than consuming)
+              
+              **Possible causes**:
+              1. Consumer processing slower than expected
+              2. Increased job submission rate
+              3. Complex jobs taking longer
+              
+              **Action**:
+              1. Check processing rates in RabbitMQ dashboard
+              2. Monitor queue depth trend: `kubectl exec -n {{ $labels.namespace }} rabbitmq-0 -- rabbitmqctl list_queues name messages`
+              3. Check worker performance: `kubectl top pods -n {{ $labels.namespace }} -l app contains worker`
+              4. Review recent job complexity in n8n UI
+            runbook_url: "https://github.com/Copper-IQ/copperiq-monitoring/blob/main/docs/runbooks/content-platform-queue-backlog.md"
+
+        - alert: ContentPlatformQueueMultipleMessageStuck
+          expr: |
+            sum(rabbitmq_queue_messages{namespace=~"n8n-(dev|prod)"}) by (namespace, queue) > 5
+            and
+            max(rabbitmq_queue_messages_ready_max_age_seconds{namespace=~"n8n-(dev|prod)"}) by (namespace, queue) > 60
+          for: 5m
+          labels:
+            severity: warning
+            component: content-platform
+            category: application
+          annotations:
+            summary: "Content Platform queue has >5 messages waiting >1 minute"
+            description: |
+              Queue {{ $labels.queue }} in {{ $labels.namespace }} has {{ $value }} messages with oldest waiting {{ $value | humanizeDuration }}.
+              
+              **Expected processing time**: 2-8 minutes per job
+              **Threshold**: >5 messages waiting >1 minute indicates backlog forming
+              
+              **Possible causes**:
+              1. Consumer processing slowly
+              2. Job complexity increased
+              3. Worker resource constraints
+              
+              **Action**:
+              1. Monitor queue depth trend
+              2. Check worker resource usage: `kubectl top pods -n {{ $labels.namespace }} -l app contains worker`
+              3. Review job execution times in n8n UI
+              4. Consider scaling workers if sustained
+            runbook_url: "https://github.com/Copper-IQ/copperiq-monitoring/blob/main/docs/runbooks/content-platform-queue-backlog.md"

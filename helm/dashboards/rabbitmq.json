@@ -298,6 +298,285 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "All queues with current state (messages, consumers, rates)",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto",
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 200
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Messages"
+            },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              },
+              {
+                "id": "unit",
+                "value": "short"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Consumers"
+            },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-text"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": null
+                    },
+                    {
+                      "color": "green",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Age (oldest)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 60
+                    },
+                    {
+                      "color": "red",
+                      "value": 300
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "id": 11,
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Messages"
+          }
+        ]
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "expr": "rabbitmq_queue_messages{namespace=~\"$namespace\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "expr": "rabbitmq_queue_consumers{namespace=~\"$namespace\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "expr": "rabbitmq_queue_messages_ready_max_age_seconds{namespace=~\"$namespace\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        },
+        {
+          "expr": "rate(rabbitmq_queue_messages_published_total{namespace=~\"$namespace\"}[5m])",
+          "format": "table",
+          "instant": true,
+          "refId": "D"
+        },
+        {
+          "expr": "rate(rabbitmq_queue_messages_delivered_total{namespace=~\"$namespace\"}[5m])",
+          "format": "table",
+          "instant": true,
+          "refId": "E"
+        }
+      ],
+      "title": "Queue Details",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "container": true,
+              "endpoint": true,
+              "instance": true,
+              "job": true,
+              "pod": true,
+              "service": true
+            },
+            "indexByName": {},
+            "renameByName": {
+              "namespace": "Namespace",
+              "queue": "Queue",
+              "vhost": "VHost",
+              "Value #A": "Messages",
+              "Value #B": "Consumers",
+              "Value #C": "Age (oldest)",
+              "Value #D": "Publish Rate",
+              "Value #E": "Deliver Rate"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Exchange message flow",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto",
+            "inspect": false
+          },
+          "mappings": [],
+          "unit": "msgs/s"
+        }
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      },
+      "id": 12,
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Publish In Rate"
+          }
+        ]
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "expr": "rate(rabbitmq_exchange_messages_published_in_total{namespace=~\"$namespace\"}[5m])",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "expr": "rate(rabbitmq_exchange_messages_published_out_total{namespace=~\"$namespace\"}[5m])",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Exchange Throughput",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "container": true,
+              "endpoint": true,
+              "instance": true,
+              "job": true,
+              "pod": true,
+              "service": true
+            },
+            "indexByName": {},
+            "renameByName": {
+              "namespace": "Namespace",
+              "exchange": "Exchange",
+              "vhost": "VHost",
+              "Value #A": "Publish In Rate",
+              "Value #B": "Publish Out Rate"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "description": "Queue message counts by environment",
       "fieldConfig": {
         "defaults": {
@@ -362,7 +641,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 8
+        "y": 22
       },
       "id": 5,
       "options": {
@@ -454,7 +733,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 8
+        "y": 22
       },
       "id": 6,
       "options": {
@@ -559,7 +838,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 16
+        "y": 30
       },
       "id": 7,
       "options": {
@@ -660,7 +939,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 16
+        "y": 30
       },
       "id": 8,
       "options": {
@@ -751,7 +1030,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 24
+        "y": 38
       },
       "id": 9,
       "options": {
@@ -873,7 +1152,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 24
+        "y": 38
       },
       "id": 10,
       "options": {
