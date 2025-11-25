@@ -1,0 +1,36 @@
+auth:
+  existingErlangSecret: rabbitmq-secret
+  existingPasswordSecret: rabbitmq-secret
+  existingSecretErlangKey: rabbitmq-erlang-cookie
+  existingSecretPasswordKey: rabbitmq-password
+  username: n8n
+clustering:
+  enabled: false
+memoryHighWatermark:
+  enabled: true
+  type: relative
+  value: 0.4
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: false
+persistence:
+  enabled: true
+  size: 5Gi
+  storageClass: default
+plugins: rabbitmq_management rabbitmq_peer_discovery_k8s
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+service:
+  type: ClusterIP
+extraConfiguration: |
+  prometheus.return_per_object_metrics = true
+image:
+  registry: docker.io
+  repository: bitnamilegacy/rabbitmq
+  tag: "3.13.6-debian-12-r1"
