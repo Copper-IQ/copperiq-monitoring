@@ -405,6 +405,34 @@
                 }
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*Rate"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "msgs/s"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "Total.*"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              }
+            ]
           }
         ]
       },
@@ -455,6 +483,24 @@
           "format": "table",
           "instant": true,
           "refId": "E"
+        },
+        {
+          "expr": "rabbitmq_queue_messages_delivered_total{namespace=~\"$namespace\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "F"
+        },
+        {
+          "expr": "rate(rabbitmq_queue_messages_ack_total{namespace=~\"$namespace\"}[5m])",
+          "format": "table",
+          "instant": true,
+          "refId": "G"
+        },
+        {
+          "expr": "rabbitmq_queue_messages_ack_total{namespace=~\"$namespace\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "H"
         }
       ],
       "title": "Queue Details",
@@ -485,7 +531,10 @@
               "Value #B": "Consumers",
               "Value #C": "Age (oldest)",
               "Value #D": "Publish Rate",
-              "Value #E": "Deliver Rate"
+              "Value #E": "Deliver Rate",
+              "Value #F": "Total Delivered",
+              "Value #G": "Ack Rate",
+              "Value #H": "Total Acked"
             }
           }
         }
