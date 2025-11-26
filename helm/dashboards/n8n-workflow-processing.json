@@ -1124,18 +1124,24 @@
       "id": 14
     },
     {
-      "type": "stat",
+      "type": "table",
       "pluginVersion": "10.0.0",
-      "title": "Heap Usage",
+      "title": "Memory Usage Per Pod",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
-          "unit": "percentunit",
-          "decimals": 1,
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
           "mappings": [],
           "thresholds": {
+            "mode": "absolute",
             "steps": [
               {
                 "color": "green",
@@ -1149,16 +1155,106 @@
                 "color": "red",
                 "value": 0.9
               }
-            ],
-            "mode": "absolute"
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Used (MB)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "decmbytes"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Limit (MB)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "decmbytes"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Usage %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percentunit"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
           }
-        }
+        ]
       },
       "targets": [
         {
-          "expr": "max(n8n_nodejs_heap_size_used_bytes{namespace=\"$namespace\"} / n8n_nodejs_heap_size_total_bytes{namespace=\"$namespace\"})",
+          "expr": "sum(container_memory_working_set_bytes{namespace=\"$namespace\", pod=~\"n8n.*\", container!=\"\", container!=\"POD\"}) by (pod) / 1024 / 1024",
           "refId": "A",
-          "legendFormat": ""
+          "legendFormat": "{{pod}}",
+          "format": "table",
+          "instant": true
+        },
+        {
+          "expr": "sum(kube_pod_container_resource_limits{namespace=\"$namespace\", pod=~\"n8n.*\", resource=\"memory\"}) by (pod) / 1024 / 1024",
+          "refId": "B",
+          "legendFormat": "{{pod}}",
+          "format": "table",
+          "instant": true
+        },
+        {
+          "expr": "sum(container_memory_working_set_bytes{namespace=\"$namespace\", pod=~\"n8n.*\", container!=\"\", container!=\"POD\"}) by (pod) / sum(kube_pod_container_resource_limits{namespace=\"$namespace\", pod=~\"n8n.*\", resource=\"memory\"}) by (pod)",
+          "refId": "C",
+          "legendFormat": "{{pod}}",
+          "format": "table",
+          "instant": true
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "pod": 0,
+              "Value #A": 1,
+              "Value #B": 2,
+              "Value #C": 3
+            },
+            "renameByName": {
+              "pod": "Pod",
+              "Value #A": "Used (MB)",
+              "Value #B": "Limit (MB)",
+              "Value #C": "Usage %"
+            }
+          }
         }
       ],
       "gridPos": {
@@ -1168,24 +1264,21 @@
         "h": 4
       },
       "options": {
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
           ],
-          "values": false,
           "fields": ""
-        },
-        "justifyMode": "center",
-        "graphMode": "area",
-        "textMode": "value",
-        "colorMode": "value"
+        }
       },
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Heap memory usage percentage - high values may indicate memory pressure",
+      "description": "Container memory usage vs Kubernetes limits per pod - shows actual memory pressure",
       "id": 15
     },
     {
