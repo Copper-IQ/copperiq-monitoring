@@ -36,7 +36,7 @@
   "panels": [
     {
       "type": "row",
-      "title": "Bull Queue (Redis) - Workflow Job Processing",
+      "title": "Application Health - Node.js & Workers",
       "collapsed": false,
       "gridPos": {
         "x": 0,
@@ -44,7 +44,7 @@
         "w": 24,
         "h": 1
       },
-      "id": 100
+      "id": 102
     },
     {
       "type": "stat",
@@ -453,7 +453,7 @@
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 13,
+        "y": 26,
         "w": 24,
         "h": 1
       },
@@ -920,15 +920,15 @@
     },
     {
       "type": "row",
-      "title": "Application Health - Node.js & Workers",
+      "title": "Bull Queue (Redis) - Workflow Job Processing",
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 26,
+        "y": 13,
         "w": 24,
         "h": 1
       },
-      "id": 102
+      "id": 100
     },
     {
       "type": "stat",
@@ -983,7 +983,7 @@
           "fields": ""
         },
         "justifyMode": "center",
-        "graphMode": "area",
+        "graphMode": "none",
         "textMode": "value",
         "colorMode": "value"
       },
@@ -1167,8 +1167,8 @@
             },
             "properties": [
               {
-                "id": "unit",
-                "value": "decmbytes"
+                "id": "decimals",
+                "value": 0
               }
             ]
           },
@@ -1179,8 +1179,8 @@
             },
             "properties": [
               {
-                "id": "unit",
-                "value": "decmbytes"
+                "id": "decimals",
+                "value": 0
               }
             ]
           },
@@ -1258,8 +1258,8 @@
         }
       ],
       "gridPos": {
-        "x": 18,
-        "w": 6,
+        "x": 12,
+        "w": 12,
         "y": 27,
         "h": 4
       },
