@@ -1,0 +1,83 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: n8n-bull-queue-alerts
+  namespace: observability
+  labels:
+    prometheus: kube-prometheus
+    role: alert-rules
+    app.kubernetes.io/name: copperiq-monitoring
+    app.kubernetes.io/component: alert-rules
+spec:
+  groups:
+    - name: n8n-bull
+      interval: 30s
+      rules:
+        # Backlog high
+        - alert: N8NBullBacklogHigh
+          expr: |
+            n8n_scaling_mode_queue_jobs_waiting > 20
+          for: 10m
+          labels:
+            severity: warning
+            system: n8n
+            component: messaging
+            backend: redis-bull
+            service: n8n
+            category: application
+          annotations:
+            summary: "n8n Bull backlog high: {{ $value }} waiting"
+            description: |
+              Too many jobs waiting in Bull queue for 10 minutes.
+
+        # Processing stalled: backlog present but ~0 completed
+        - alert: N8NBullProcessingStalled
+          expr: |
+            n8n_scaling_mode_queue_jobs_waiting > 0
+              and rate(n8n_scaling_mode_queue_jobs_completed[5m]) <= 0.01
+          for: 10m
+          labels:
+            severity: critical
+            system: n8n
+            component: messaging
+            backend: redis-bull
+            service: n8n
+            category: application
+          annotations:
+            summary: "n8n Bull processing stalled (no completions)"
+            description: |
+              Jobs are queued but none are being completed.
+
+        # Failures high
+        - alert: N8NBullFailuresHigh
+          expr: |
+            rate(n8n_scaling_mode_queue_jobs_failed[15m]) > 0.05
+          for: 15m
+          labels:
+            severity: warning
+            system: n8n
+            component: messaging
+            backend: redis-bull
+            service: n8n
+            category: application
+          annotations:
+            summary: "n8n Bull failure rate high"
+            description: |
+              High failure rate detected over 15 minutes.
+
+        # Active stuck: backlog present but active == 0
+        - alert: N8NBullActiveStuck
+          expr: |
+            n8n_scaling_mode_queue_jobs_waiting > 0 and n8n_scaling_mode_queue_jobs_active == 0
+          for: 10m
+          labels:
+            severity: critical
+            system: n8n
+            component: messaging
+            backend: redis-bull
+            service: n8n
+            category: application
+          annotations:
+            summary: "n8n Bull workers not processing (active=0)"
+            description: |
+              Backlog exists but no active jobs for 10 minutes.

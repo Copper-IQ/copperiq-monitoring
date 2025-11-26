@@ -13,219 +13,252 @@ spec:
     - name: content-platform-queues
       interval: 30s
       rules:
-        # Note: 1 consumer, <10 clients, 2-8 min jobs = ~7-30 jobs/hour capacity
-        
-        - alert: ContentPlatformDevQueueBacklog
+        # Queue filter (Content Platform queues)
+        # cp_queue_regex = ^(llm-seo|content-platform-.*)$
+
+        # Backlog thresholds (per queue)
+        - alert: N8NRabbitMQQueueBacklog
           expr: |
-            sum(rabbitmq_queue_messages{namespace="n8n-dev"}) > 200
+            sum(rabbitmq_queue_messages{namespace="n8n-dev", queue=~"^(llm-seo|content-platform-.*)$"}) by (namespace, vhost, queue) > 200
           for: 10m
           labels:
             severity: warning
-            component: content-platform
+            system: n8n
+            component: messaging
+            backend: rabbitmq
+            service: content-platform
             category: application
           annotations:
-            summary: "Content Platform Dev queue backlog: {{ $value }} messages"
+            summary: "Dev backlog on queue {{ $labels.queue }}: {{ $value }} messages"
             description: |
-              Development environment n8n queue is growing: {{ $value }} messages queued.
+              Development environment RabbitMQ queue is growing: {{ $value }} messages queued.
               
-              **Context**: 
-              - Normal capacity: ~7-30 jobs/hour (1 worker, 2-8 min per job)
-              - Current baseline: <10 active clients
+              Context: ~7-30 jobs/hour capacity (1 worker, 2-8 min per job)
               
-              **Possible causes**:
-              1. Worker pod unhealthy or restarting
-              2. Jobs taking longer than expected
-              3. Increased content generation activity
+              Possible causes: worker unhealthy, slower jobs, increased activity.
               
-              **Action**:
+              Action:
               1. Check n8n worker health: `kubectl get pods -n n8n-dev -l app=n8n-dev-worker`
-              2. Check worker logs: `kubectl logs -n n8n-dev -l app=n8n-dev-worker --tail=100`
-              3. Verify RabbitMQ consumers: `kubectl exec -n n8n-dev rabbitmq-0 -- rabbitmqctl list_queues name consumers messages`
-            runbook_url: "https://github.com/Copper-IQ/copperiq-monitoring/blob/main/docs/runbooks/content-platform-queue-backlog.md"
+              2. Check logs: `kubectl logs -n n8n-dev -l app=n8n-dev-worker --tail=100`
+              3. Verify consumers: `kubectl exec -n n8n-dev rabbitmq-0 -- rabbitmqctl list_queues name consumers messages`
 
-        - alert: ContentPlatformProdQueueBacklog
+        - alert: N8NRabbitMQQueueBacklog
           expr: |
-            sum(rabbitmq_queue_messages{namespace="n8n-prod"}) > 500
+            sum(rabbitmq_queue_messages{namespace="n8n-prod", queue=~"^(llm-seo|content-platform-.*)$"}) by (namespace, vhost, queue) > 500
           for: 10m
           labels:
             severity: warning
-            component: content-platform
+            system: n8n
+            component: messaging
+            backend: rabbitmq
+            service: content-platform
             category: application
           annotations:
-            summary: "Content Platform Prod queue backlog: {{ $value }} messages"
+            summary: "Prod backlog on queue {{ $labels.queue }}: {{ $value }} messages"
             description: |
-              Production environment n8n queue is growing: {{ $value }} messages queued.
+              Production environment RabbitMQ queue is growing: {{ $value }} messages queued.
               
-              **Context**: 
-              - Normal capacity: ~7-30 jobs/hour (1 worker, 2-8 min per job)
-              - Current baseline: <10 active clients
+              Context: ~7-30 jobs/hour capacity (1 worker, 2-8 min per job)
               
-              **Possible causes**:
-              1. Worker pod unhealthy or restarting
-              2. Jobs taking longer than expected
-              3. Increased content generation activity (customer growth!)
+              Possible causes: worker unhealthy, slower jobs, increased activity.
               
-              **Action**:
+              Action:
               1. Check n8n worker health: `kubectl get pods -n n8n-prod -l app=n8n-worker`
-              2. Check worker logs: `kubectl logs -n n8n-prod -l app=n8n-worker --tail=100`
-              3. Consider scaling workers if sustained growth
-              4. Verify RabbitMQ consumers: `kubectl exec -n n8n-prod rabbitmq-0 -- rabbitmqctl list_queues name consumers messages`
-            runbook_url: "https://github.com/Copper-IQ/copperiq-monitoring/blob/main/docs/runbooks/content-platform-queue-backlog.md"
+              2. Check logs: `kubectl logs -n n8n-prod -l app=n8n-worker --tail=100`
+              3. Consider scaling workers if sustained
+              4. Verify consumers: `kubectl exec -n n8n-prod rabbitmq-0 -- rabbitmqctl list_queues name consumers messages`
 
-        - alert: ContentPlatformProdQueueCritical
+        - alert: N8NRabbitMQQueueBacklog
           expr: |
-            sum(rabbitmq_queue_messages{namespace="n8n-prod"}) > 1000
+            sum(rabbitmq_queue_messages{namespace="n8n-prod", queue=~"^(llm-seo|content-platform-.*)$"}) by (namespace, vhost, queue) > 1000
           for: 5m
           labels:
             severity: critical
-            component: content-platform
+            system: n8n
+            component: messaging
+            backend: rabbitmq
+            service: content-platform
             category: application
           annotations:
-            summary: "Content Platform Prod queue CRITICAL: {{ $value }} messages"
+            summary: "CRITICAL backlog on queue {{ $labels.queue }}: {{ $value }} messages"
             description: |
-              SEVERE BACKLOG DETECTED: {{ $value }} messages in production queue.
+              Severe backlog: {{ $value }} messages in production queue.
               
-              At current capacity (~7-30 jobs/hour), this represents 33-143 hours of backlog.
-              
-              **Immediate action required**:
-              1. Check if workers are consuming: `kubectl exec -n n8n-prod rabbitmq-0 -- rabbitmqctl list_consumers`
-              2. Check worker resource limits: `kubectl top pods -n n8n-prod -l app=n8n-worker`
-              3. Check for errors in worker logs: `kubectl logs -n n8n-prod -l app=n8n-worker --tail=500 | grep -i error`
-              4. Scale workers immediately: `kubectl scale deployment n8n-worker -n n8n-prod --replicas=3`
-              5. Notify customers of potential delays
-            runbook_url: "https://github.com/Copper-IQ/copperiq-monitoring/blob/main/docs/runbooks/content-platform-queue-backlog.md"
+              Immediate action required:
+              1. Check consumers: `kubectl exec -n n8n-prod rabbitmq-0 -- rabbitmqctl list_consumers`
+              2. Check worker resources: `kubectl top pods -n n8n-prod -l app=n8n-worker`
+              3. Check errors: `kubectl logs -n n8n-prod -l app=n8n-worker --tail=500 | grep -i error`
+              4. Scale workers: `kubectl scale deployment n8n-worker -n n8n-prod --replicas=3`
 
-        - alert: ContentPlatformQueueStale
+        # Stale messages (oldest ready message age)
+        - alert: N8NRabbitMQQueueStale
           expr: |
-            max(rabbitmq_queue_messages_ready_max_age_seconds{namespace=~"n8n-(dev|prod)"}) > 600
+            rabbitmq_queue_messages_ready_max_age_seconds{namespace=~"n8n-(dev|prod)", queue=~"^(llm-seo|content-platform-.*)$"} > 600
           for: 5m
           labels:
             severity: warning
-            component: content-platform
+            system: n8n
+            component: messaging
+            backend: rabbitmq
+            service: content-platform
             category: application
           annotations:
-            summary: "Content Platform queue messages aging (>10 min)"
+            summary: "Queue {{ $labels.queue }} messages aging (>10 min)"
             description: |
               Oldest message in {{ $labels.namespace }} queue is {{ $value | humanizeDuration }} old.
-              
-              **Expected**: 2-8 minutes (normal job duration)
-              **Actual**: {{ $value | humanizeDuration }}
-              
-              **Possible causes**:
-              1. Consumer not picking up jobs
-              2. Jobs failing and requeuing
-              3. Worker stuck processing one job
-              
-              **Action**:
-              1. Check consumer count: `kubectl exec -n {{ $labels.namespace }} rabbitmq-0 -- rabbitmqctl list_queues name consumers`
-              2. Check if workers are blocked: `kubectl logs -n {{ $labels.namespace }} -l app=n8n-worker --tail=50`
-              3. Check for stuck jobs in n8n UI
-            runbook_url: "https://github.com/Copper-IQ/copperiq-monitoring/blob/main/docs/runbooks/content-platform-queue-backlog.md"
+              Expected: 2-8 minutes.
 
-        - alert: ContentPlatformQueueStaleCritical
+        - alert: N8NRabbitMQQueueStale
           expr: |
-            max(rabbitmq_queue_messages_ready_max_age_seconds{namespace=~"n8n-(dev|prod)"}) > 1800
+            max(rabbitmq_queue_messages_ready_max_age_seconds{namespace=~"n8n-(dev|prod)", queue=~"^(llm-seo|content-platform-.*)$"}) by (namespace, vhost, queue) > 1800
           for: 5m
           labels:
             severity: critical
-            component: content-platform
+            system: n8n
+            component: messaging
+            backend: rabbitmq
+            service: content-platform
             category: application
           annotations:
-            summary: "Content Platform queue messages STALE (>30 min)"
+            summary: "Queue {{ $labels.queue }} messages STALE (>30 min)"
             description: |
-              CRITICAL: Oldest message in {{ $labels.namespace }} is {{ $value | humanizeDuration }} old.
-              
-              **Expected job duration**: 2-8 minutes
-              **Actual age**: {{ $value | humanizeDuration }}
-              
-              **Consumers may be stuck or crashed**.
-              
-              **Immediate action**:
-              1. Verify consumers exist: `kubectl exec -n {{ $labels.namespace }} rabbitmq-0 -- rabbitmqctl list_consumers`
-              2. Restart workers: `kubectl rollout restart deployment -n {{ $labels.namespace }} -l app contains worker`
-              3. Check RabbitMQ logs: `kubectl logs -n {{ $labels.namespace }} rabbitmq-0 --tail=200`
-            runbook_url: "https://github.com/Copper-IQ/copperiq-monitoring/blob/main/docs/runbooks/content-platform-queue-backlog.md"
+              Consumers may be stuck or crashed.
 
-        - alert: ContentPlatformNoConsumers
+        # No consumers
+        - alert: N8NRabbitMQQueueNoConsumers
           expr: |
-            sum(rabbitmq_queue_consumers{namespace=~"n8n-(dev|prod)"}) by (namespace, queue) == 0 
-            and rabbitmq_queue_messages{namespace=~"n8n-(dev|prod)"} > 0
+            sum(rabbitmq_queue_consumers{namespace=~"n8n-(dev|prod)", queue=~"^(llm-seo|content-platform-.*)$"}) by (namespace, vhost, queue) == 0
+              and sum(rabbitmq_queue_messages{namespace=~"n8n-(dev|prod)", queue=~"^(llm-seo|content-platform-.*)$"}) by (namespace, vhost, queue) > 0
           for: 5m
           labels:
             severity: critical
-            component: content-platform
+            system: n8n
+            component: messaging
+            backend: rabbitmq
+            service: content-platform
             category: application
           annotations:
-            summary: "Content Platform queue has no consumers"
+            summary: "Queue {{ $labels.queue }} has no consumers"
             description: |
-              CRITICAL: Queue {{ $labels.queue }} in {{ $labels.namespace }} has messages but NO CONSUMERS.
-              
-              **Impact**: Content generation is completely stopped.
-              
-              **Immediate action**:
-              1. Check worker pods: `kubectl get pods -n {{ $labels.namespace }} -l app contains worker`
-              2. Check worker logs: `kubectl logs -n {{ $labels.namespace }} -l app contains worker --tail=100`
-              3. Verify RabbitMQ connection: `kubectl exec -n {{ $labels.namespace }} rabbitmq-0 -- rabbitmqctl list_connections`
-              4. Restart workers if needed: `kubectl rollout restart deployment -n {{ $labels.namespace }} -l app contains worker`
-            runbook_url: "https://github.com/Copper-IQ/copperiq-monitoring/blob/main/docs/runbooks/content-platform-queue-backlog.md"
+              Impact: processing stopped.
 
-        - alert: ContentPlatformQueuePilingUp
+        # Rate imbalance (publish > ack)
+        - alert: N8NRabbitMQQueuePilingUp
           expr: |
             (
-              rate(rabbitmq_queue_messages_published_total{namespace=~"n8n-(dev|prod)"}[5m])
+              sum(rate(rabbitmq_queue_messages_published_total{namespace=~"n8n-(dev|prod)", queue=~"^(llm-seo|content-platform-.*)$"}[5m])) by (namespace, vhost, queue)
               -
-              rate(rabbitmq_queue_messages_delivered_total{namespace=~"n8n-(dev|prod)"}[5m])
+              sum(rate(rabbitmq_queue_messages_ack_total{namespace=~"n8n-(dev|prod)", queue=~"^(llm-seo|content-platform-.*)$"}[5m])) by (namespace, vhost, queue)
             ) > 0.1
           for: 10m
           labels:
             severity: warning
+            system: n8n
+            component: messaging
+            backend: rabbitmq
+            service: content-platform
+            category: application
+          annotations:
+            summary: "Queue {{ $labels.queue }} is piling up"
+            description: |
+              Incoming rate exceeds processing (acks) rate.
+
+        # >5 messages waiting >1 minute
+        - alert: N8NRabbitMQQueueWaitingOver1m
+          expr: |
+            sum(rabbitmq_queue_messages{namespace=~"n8n-(dev|prod)", queue=~"^(llm-seo|content-platform-.*)$"}) by (namespace, vhost, queue) > 5
+              and max(rabbitmq_queue_messages_ready_max_age_seconds{namespace=~"n8n-(dev|prod)", queue=~"^(llm-seo|content-platform-.*)$"}) by (namespace, vhost, queue) > 60
+          for: 5m
+          labels:
+            severity: warning
+            system: n8n
+            component: messaging
+            backend: rabbitmq
+            service: content-platform
+            category: application
+          annotations:
+            summary: "Queue {{ $labels.queue }} has >5 messages waiting >1 minute"
+            description: |
+              Early backlog signal.
+
+        # Messages present but acks ~ 0
+        - alert: N8NRabbitMQQueueNoProcessing
+          expr: |
+            sum(rabbitmq_queue_messages{namespace=~"n8n-(dev|prod)", queue=~"^(llm-seo|content-platform-.*)$"}) by (namespace, vhost, queue) > 0
+              and sum(rate(rabbitmq_queue_messages_ack_total{namespace=~"n8n-(dev|prod)", queue=~"^(llm-seo|content-platform-.*)$"}[5m])) by (namespace, vhost, queue) <= 0.01
+          for: 10m
+          labels:
+            severity: critical
+            system: n8n
+            component: messaging
+            backend: rabbitmq
+            service: content-platform
+            category: application
+          annotations:
+            summary: "Queue {{ $labels.queue }} not processing (acks ~ 0 msg/s)"
+            description: |
+              Messages present but no acknowledgements for 10 minutes.
+
+        # Drain time > 30 minutes
+        - alert: N8NRabbitMQQueueDrainTimeHigh
+          expr: |
+            sum(rabbitmq_queue_messages{namespace=~"n8n-(dev|prod)", queue=~"^(llm-seo|content-platform-.*)$"}) by (namespace, vhost, queue)
+              / clamp_min(sum(rate(rabbitmq_queue_messages_ack_total{namespace=~"n8n-(dev|prod)", queue=~"^(llm-seo|content-platform-.*)$"}[5m])) by (namespace, vhost, queue), 0.01)
+              > 1800
+          for: 10m
+          labels:
+            severity: warning
+            system: n8n
+            component: messaging
+            backend: rabbitmq
+            service: content-platform
+            category: application
+          annotations:
+            summary: "Queue {{ $labels.queue }} drain time > 30 minutes"
+            description: |
+              Estimated drain time exceeds 30 minutes at current ack rate.
+            runbook_url: "https://github.com/Copper-IQ/copperiq-monitoring/blob/main/docs/runbooks/content-platform-queue-backlog.md"
+
+- alert: N8NContentQueueNoProcessing
+          expr: |
+            sum(rabbitmq_queue_messages{namespace=~"n8n-(dev|prod)"}) by (namespace, vhost, queue) > 0
+            and
+            sum(rate(rabbitmq_queue_messages_ack_total{namespace=~"n8n-(dev|prod)"}[5m])) by (namespace, vhost, queue) <= 0.01
+          for: 10m
+          labels:
+            severity: critical
             component: content-platform
             category: application
           annotations:
-            summary: "Content Platform queue {{ $labels.queue }} is piling up"
+            summary: "Queue {{ $labels.queue }} not processing (acks ~ 0 msg/s)"
             description: |
-              Queue {{ $labels.queue }} in {{ $labels.namespace }} has incoming rate > processing rate.
+              Queue {{ $labels.queue }} in {{ $labels.namespace }} has messages but no acknowledgements for 10 minutes.
               
-              **Rate imbalance**: {{ $value | humanize }} msg/s (positive = adding faster than consuming)
-              
-              **Possible causes**:
-              1. Consumer processing slower than expected
-              2. Increased job submission rate
-              3. Complex jobs taking longer
-              
+              **Impact**: Processing stalled.
               **Action**:
-              1. Check processing rates in RabbitMQ dashboard
-              2. Monitor queue depth trend: `kubectl exec -n {{ $labels.namespace }} rabbitmq-0 -- rabbitmqctl list_queues name messages`
-              3. Check worker performance: `kubectl top pods -n {{ $labels.namespace }} -l app contains worker`
-              4. Review recent job complexity in n8n UI
+              1. Verify consumers: `kubectl exec -n {{ $labels.namespace }} rabbitmq-0 -- rabbitmqctl list_queues name consumers`
+              2. Check worker logs for errors: `kubectl logs -n {{ $labels.namespace }} -l app contains worker --tail=200`
+              3. Restart workers if needed.
             runbook_url: "https://github.com/Copper-IQ/copperiq-monitoring/blob/main/docs/runbooks/content-platform-queue-backlog.md"
 
-        - alert: ContentPlatformQueueMultipleMessageStuck
+- alert: N8NContentQueueDrainTimeHigh
           expr: |
-            sum(rabbitmq_queue_messages{namespace=~"n8n-(dev|prod)"}) by (namespace, queue) > 5
-            and
-            max(rabbitmq_queue_messages_ready_max_age_seconds{namespace=~"n8n-(dev|prod)"}) by (namespace, queue) > 60
-          for: 5m
+            sum(rabbitmq_queue_messages{namespace=~"n8n-(dev|prod)"}) by (namespace, vhost, queue)
+              /
+            clamp_min(sum(rate(rabbitmq_queue_messages_ack_total{namespace=~"n8n-(dev|prod)"}[5m])) by (namespace, vhost, queue), 0.01)
+              > 1800
+          for: 10m
           labels:
             severity: warning
             component: content-platform
             category: application
           annotations:
-            summary: "Content Platform queue has >5 messages waiting >1 minute"
+            summary: "Queue {{ $labels.queue }} drain time > 30 minutes"
             description: |
-              Queue {{ $labels.queue }} in {{ $labels.namespace }} has {{ $value }} messages with oldest waiting {{ $value | humanizeDuration }}.
+              Estimated time to drain queue {{ $labels.queue }} in {{ $labels.namespace }} exceeds 30 minutes based on current ack rate.
               
-              **Expected processing time**: 2-8 minutes per job
-              **Threshold**: >5 messages waiting >1 minute indicates backlog forming
-              
-              **Possible causes**:
-              1. Consumer processing slowly
-              2. Job complexity increased
-              3. Worker resource constraints
-              
+              **Formula**: messages / ack_rate over 5m window
               **Action**:
-              1. Monitor queue depth trend
-              2. Check worker resource usage: `kubectl top pods -n {{ $labels.namespace }} -l app contains worker`
-              3. Review job execution times in n8n UI
-              4. Consider scaling workers if sustained
+              1. Consider scaling workers or reducing publish rate.
+              2. Investigate slow jobs in n8n.
             runbook_url: "https://github.com/Copper-IQ/copperiq-monitoring/blob/main/docs/runbooks/content-platform-queue-backlog.md"
