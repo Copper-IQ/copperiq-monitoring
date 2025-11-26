@@ -1163,9 +1163,13 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Used (MB)"
+              "options": "Used"
             },
             "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              },
               {
                 "id": "decimals",
                 "value": 0
@@ -1175,9 +1179,13 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Limit (MB)"
+              "options": "Limit"
             },
             "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              },
               {
                 "id": "decimals",
                 "value": 0
@@ -1210,21 +1218,21 @@
       },
       "targets": [
         {
-          "expr": "sum(container_memory_working_set_bytes{namespace=\"$namespace\", pod=~\"n8n.*\", container!=\"\", container!=\"POD\"}) by (pod) / 1024 / 1024",
+          "expr": "sum(container_memory_working_set_bytes{namespace=\"$namespace\", pod=~\"n8n.*\", container!=\"\", container!=\"POD\"}) by (pod)",
           "refId": "A",
           "legendFormat": "{{pod}}",
           "format": "table",
           "instant": true
         },
         {
-          "expr": "sum(kube_pod_container_resource_limits{namespace=\"$namespace\", pod=~\"n8n.*\", resource=\"memory\"}) by (pod) / 1024 / 1024",
+          "expr": "sum(kube_pod_container_resource_limits{namespace=\"$namespace\", pod=~\"n8n.*\", resource=\"memory\", unit=\"byte\"}) by (pod)",
           "refId": "B",
           "legendFormat": "{{pod}}",
           "format": "table",
           "instant": true
         },
         {
-          "expr": "sum(container_memory_working_set_bytes{namespace=\"$namespace\", pod=~\"n8n.*\", container!=\"\", container!=\"POD\"}) by (pod) / sum(kube_pod_container_resource_limits{namespace=\"$namespace\", pod=~\"n8n.*\", resource=\"memory\"}) by (pod)",
+          "expr": "sum(container_memory_working_set_bytes{namespace=\"$namespace\", pod=~\"n8n.*\", container!=\"\", container!=\"POD\"}) by (pod) / sum(kube_pod_container_resource_limits{namespace=\"$namespace\", pod=~\"n8n.*\", resource=\"memory\", unit=\"byte\"}) by (pod)",
           "refId": "C",
           "legendFormat": "{{pod}}",
           "format": "table",
@@ -1250,8 +1258,8 @@
             },
             "renameByName": {
               "pod": "Pod",
-              "Value #A": "Used (MB)",
-              "Value #B": "Limit (MB)",
+              "Value #A": "Used",
+              "Value #B": "Limit",
               "Value #C": "Usage %"
             }
           }
