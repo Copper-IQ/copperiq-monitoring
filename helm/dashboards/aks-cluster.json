@@ -404,7 +404,7 @@
           "azureMonitor": {
             "aggregation": "Average",
             "dimensionFilters": [],
-            "metricName": "apiserver_current_memory_usage_percentage",
+            "metricName": "apiserver_memory_usage_percentage",
             "metricNamespace": "Microsoft.ContainerService/managedClusters",
             "resourceGroup": "shared-hosting-accept-prod",
             "resourceName": "accept-prod",
