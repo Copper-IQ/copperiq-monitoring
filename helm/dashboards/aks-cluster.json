@@ -346,29 +346,13 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "API server availability",
+      "description": "Number of nodes with healthy kubelet (control plane not accessible on managed AKS)",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
-          "mappings": [
-            {
-              "options": {
-                "0": {
-                  "color": "red",
-                  "index": 0,
-                  "text": "DOWN"
-                },
-                "1": {
-                  "color": "green",
-                  "index": 1,
-                  "text": "UP"
-                }
-              },
-              "type": "value"
-            }
-          ],
+          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -377,8 +361,12 @@
                 "value": null
               },
               {
-                "color": "green",
+                "color": "yellow",
                 "value": 1
+              },
+              {
+                "color": "green",
+                "value": 2
               }
             ]
           }
@@ -393,7 +381,7 @@
       "id": 6,
       "options": {
         "colorMode": "background",
-        "graphMode": "none",
+        "graphMode": "area",
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
@@ -403,16 +391,16 @@
           "fields": "",
           "values": false
         },
-        "textMode": "value"
+        "textMode": "value_and_name"
       },
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "up{job=\"kube-apiserver\"}",
+          "expr": "count(up{job=\"kubelet\"})",
           "refId": "A"
         }
       ],
-      "title": "API Server",
+      "title": "Healthy Nodes",
       "type": "stat"
     },
     {
