@@ -101,7 +101,9 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -110,7 +112,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "sum(copperiq_billing_charge_amount_cents_total) / 100",
+          "expr": "sum(copperiq_billing_charge_amount_cents_total{namespace=\"$namespace\"}) / 100",
           "refId": "A"
         }
       ],
@@ -154,7 +156,9 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -163,7 +167,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "sum(copperiq_billing_charge_total)",
+          "expr": "sum(copperiq_billing_charge_total{namespace=\"$namespace\"})",
           "refId": "A"
         }
       ],
@@ -207,7 +211,9 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -216,7 +222,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "sum(copperiq_billing_charge_amount_cents_total) / sum(copperiq_billing_charge_total) / 100",
+          "expr": "sum(copperiq_billing_charge_amount_cents_total{namespace=\"$namespace\"}) / sum(copperiq_billing_charge_total{namespace=\"$namespace\"}) / 100",
           "refId": "A"
         }
       ],
@@ -253,16 +259,24 @@
       },
       "id": 4,
       "options": {
-        "displayLabels": ["name", "percent"],
+        "displayLabels": [
+          "name",
+          "percent"
+        ],
         "legend": {
           "displayMode": "table",
           "placement": "right",
           "showLegend": true,
-          "values": ["value", "percent"]
+          "values": [
+            "value",
+            "percent"
+          ]
         },
         "pieType": "pie",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -274,7 +288,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "sum by (pipeline_key) (copperiq_billing_charge_amount_cents_total) / 100",
+          "expr": "sum by (pipeline_key) (copperiq_billing_charge_amount_cents_total{namespace=\"$namespace\"}) / 100",
           "format": "time_series",
           "instant": true,
           "legendFormat": "{{pipeline_key}}",
@@ -359,7 +373,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "sum by (node_id) (copperiq_billing_charge_amount_cents_total) / 100",
+          "expr": "sum by (node_id) (copperiq_billing_charge_amount_cents_total{namespace=\"$namespace\"}) / 100",
           "format": "time_series",
           "instant": true,
           "legendFormat": "{{node_id}}",
@@ -432,7 +446,10 @@
       "id": 6,
       "options": {
         "legend": {
-          "calcs": ["sum", "mean"],
+          "calcs": [
+            "sum",
+            "mean"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -445,7 +462,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "sum by (pipeline_key) (rate(copperiq_billing_charge_amount_cents_total[5m])) * 300 / 100",
+          "expr": "sum by (pipeline_key) (rate(copperiq_billing_charge_amount_cents_total{namespace=\"$namespace\"}[5m])) * 300 / 100",
           "legendFormat": "{{pipeline_key}}",
           "refId": "A"
         }
@@ -510,7 +527,9 @@
         "footer": {
           "countRows": false,
           "fields": "",
-          "reducer": ["sum"],
+          "reducer": [
+            "sum"
+          ],
           "show": true
         },
         "showHeader": true,
@@ -524,7 +543,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "sum by (pipeline_key, node_id) (copperiq_billing_charge_amount_cents_total) / 100",
+          "expr": "sum by (pipeline_key, node_id) (copperiq_billing_charge_amount_cents_total{namespace=\"$namespace\"}) / 100",
           "format": "table",
           "instant": true,
           "refId": "A"
@@ -557,9 +576,43 @@
   "refresh": "30s",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["content-platform", "billing", "revenue"],
+  "tags": [
+    "content-platform",
+    "billing",
+    "revenue"
+  ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "queryValue": "",
+        "multi": false,
+        "type": "custom",
+        "label": "Environment",
+        "description": "Select Content Platform environment",
+        "options": [
+          {
+            "value": "content-platform-accept",
+            "text": "content-platform-accept",
+            "selected": true
+          },
+          {
+            "value": "content-platform-prod",
+            "text": "content-platform-prod",
+            "selected": false
+          }
+        ],
+        "includeAll": false,
+        "query": "content-platform-accept,content-platform-prod",
+        "skipUrlSync": false,
+        "name": "namespace",
+        "hide": 0,
+        "current": {
+          "value": "content-platform-accept",
+          "text": "content-platform-accept",
+          "selected": false
+        }
+      }
+    ]
   },
   "time": {
     "from": "now-24h",

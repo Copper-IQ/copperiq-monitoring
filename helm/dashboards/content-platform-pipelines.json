@@ -102,7 +102,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "sum(copperiq_pipeline_execution_total)",
+          "expr": "sum(copperiq_pipeline_execution_total{namespace=\"$namespace\"})",
           "refId": "A"
         }
       ],
@@ -165,7 +165,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "sum(copperiq_pipeline_execution_total{status=\"succeeded\"}) / sum(copperiq_pipeline_execution_total) * 100",
+          "expr": "sum(copperiq_pipeline_execution_total{namespace=\"$namespace\",status=\"succeeded\"}) / sum(copperiq_pipeline_execution_total{namespace=\"$namespace\"}) * 100",
           "refId": "A"
         }
       ],
@@ -226,7 +226,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "rate(copperiq_pipeline_execution_duration_seconds_sum[5m]) / rate(copperiq_pipeline_execution_duration_seconds_count[5m])",
+          "expr": "rate(copperiq_pipeline_execution_duration_seconds_sum{namespace=\"$namespace\"}[5m]) / rate(copperiq_pipeline_execution_duration_seconds_count{namespace=\"$namespace\"}[5m])",
           "refId": "A"
         }
       ],
@@ -279,7 +279,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "sum(copperiq_pipeline_node_execution_total)",
+          "expr": "sum(copperiq_pipeline_node_execution_total{namespace=\"$namespace\"})",
           "refId": "A"
         }
       ],
@@ -362,7 +362,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "sum by (pipeline_key) (rate(copperiq_pipeline_execution_total[5m]))",
+          "expr": "sum by (pipeline_key) (rate(copperiq_pipeline_execution_total{namespace=\"$namespace\"}[5m]))",
           "legendFormat": "{{pipeline_key}}",
           "refId": "A"
         }
@@ -478,7 +478,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "sum by (pipeline_key, status) (rate(copperiq_pipeline_execution_total[5m]))",
+          "expr": "sum by (pipeline_key, status) (rate(copperiq_pipeline_execution_total{namespace=\"$namespace\"}[5m]))",
           "legendFormat": "{{pipeline_key}} - {{status}}",
           "refId": "A"
         }
@@ -562,7 +562,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "rate(copperiq_pipeline_node_execution_duration_seconds_sum[5m]) / rate(copperiq_pipeline_node_execution_duration_seconds_count[5m])",
+          "expr": "rate(copperiq_pipeline_node_execution_duration_seconds_sum{namespace=\"$namespace\"}[5m]) / rate(copperiq_pipeline_node_execution_duration_seconds_count{namespace=\"$namespace\"}[5m])",
           "legendFormat": "{{node_id}}",
           "refId": "A"
         }
@@ -641,7 +641,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "sum by (node_id, status) (copperiq_pipeline_node_execution_total)",
+          "expr": "sum by (node_id, status) (copperiq_pipeline_node_execution_total{namespace=\"$namespace\"})",
           "format": "table",
           "instant": true,
           "refId": "A"
@@ -735,7 +735,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "sum by (le, pipeline_key) (rate(copperiq_pipeline_node_execution_duration_seconds_bucket[5m]))",
+          "expr": "sum by (le, pipeline_key) (rate(copperiq_pipeline_node_execution_duration_seconds_bucket{namespace=\"$namespace\"}[5m]))",
           "format": "heatmap",
           "legendFormat": "{{pipeline_key}}",
           "refId": "A"
@@ -753,6 +753,35 @@
     "list": [
       {
         "current": {
+          "selected": false,
+          "text": "content-platform-accept",
+          "value": "content-platform-accept"
+        },
+        "description": "Select Content Platform environment",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Environment",
+        "multi": false,
+        "name": "namespace",
+        "options": [
+          {
+            "selected": true,
+            "text": "content-platform-accept",
+            "value": "content-platform-accept"
+          },
+          {
+            "selected": false,
+            "text": "content-platform-prod",
+            "value": "content-platform-prod"
+          }
+        ],
+        "query": "content-platform-accept,content-platform-prod",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {
           "selected": true,
           "text": ["All"],
           "value": ["$__all"]
@@ -761,7 +790,7 @@
           "type": "prometheus",
           "uid": "prometheus"
         },
-        "definition": "label_values(copperiq_pipeline_execution_total, pipeline_key)",
+        "definition": "label_values(copperiq_pipeline_execution_total{namespace=\"$namespace\"}, pipeline_key)",
         "hide": 0,
         "includeAll": true,
         "label": "Pipeline Type",
@@ -769,7 +798,7 @@
         "name": "pipeline_key",
         "options": [],
         "query": {
-          "query": "label_values(copperiq_pipeline_execution_total, pipeline_key)",
+          "query": "label_values(copperiq_pipeline_execution_total{namespace=\"$namespace\"}, pipeline_key)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 1,
@@ -788,7 +817,7 @@
           "type": "prometheus",
           "uid": "prometheus"
         },
-        "definition": "label_values(copperiq_pipeline_node_execution_total, node_id)",
+        "definition": "label_values(copperiq_pipeline_node_execution_total{namespace=\"$namespace\"}, node_id)",
         "hide": 0,
         "includeAll": true,
         "label": "Node Type",
@@ -796,7 +825,7 @@
         "name": "node_id",
         "options": [],
         "query": {
-          "query": "label_values(copperiq_pipeline_node_execution_total, node_id)",
+          "query": "label_values(copperiq_pipeline_node_execution_total{namespace=\"$namespace\"}, node_id)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 1,

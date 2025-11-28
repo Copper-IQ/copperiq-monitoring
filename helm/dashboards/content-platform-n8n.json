@@ -104,7 +104,9 @@
       "options": {
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -114,7 +116,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "sum(rate(copperiq_n8n_webhook_calls_total{status=\"success\"}[5m])) / sum(rate(copperiq_n8n_webhook_calls_total[5m])) * 100",
+          "expr": "sum(rate(copperiq_n8n_webhook_calls_total{namespace=\"$namespace\"}{status=\"success\"}[5m])) / sum(rate(copperiq_n8n_webhook_calls_total{namespace=\"$namespace\"}[5m])) * 100",
           "refId": "A"
         }
       ],
@@ -158,7 +160,9 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -167,7 +171,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "sum(copperiq_n8n_webhook_calls_total)",
+          "expr": "sum(copperiq_n8n_webhook_calls_total{namespace=\"$namespace\"})",
           "refId": "A"
         }
       ],
@@ -219,7 +223,9 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -228,7 +234,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "rate(copperiq_n8n_webhook_duration_seconds_sum[5m]) / rate(copperiq_n8n_webhook_duration_seconds_count[5m])",
+          "expr": "rate(copperiq_n8n_webhook_duration_seconds{namespace=\"$namespace\"}_sum[5m]) / rate(copperiq_n8n_webhook_duration_seconds{namespace=\"$namespace\"}_count[5m])",
           "refId": "A"
         }
       ],
@@ -298,7 +304,11 @@
       "id": 4,
       "options": {
         "legend": {
-          "calcs": ["lastNotNull", "mean", "max"],
+          "calcs": [
+            "lastNotNull",
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -311,7 +321,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "rate(copperiq_n8n_webhook_duration_seconds_sum[5m]) / rate(copperiq_n8n_webhook_duration_seconds_count[5m])",
+          "expr": "rate(copperiq_n8n_webhook_duration_seconds{namespace=\"$namespace\"}_sum[5m]) / rate(copperiq_n8n_webhook_duration_seconds{namespace=\"$namespace\"}_count[5m])",
           "legendFormat": "{{workflow_id}}",
           "refId": "A"
         }
@@ -414,7 +424,9 @@
       "id": 5,
       "options": {
         "legend": {
-          "calcs": ["sum"],
+          "calcs": [
+            "sum"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -427,7 +439,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "sum by (status) (rate(copperiq_n8n_webhook_calls_total[5m]))",
+          "expr": "sum by (status) (rate(copperiq_n8n_webhook_calls_total{namespace=\"$namespace\"}[5m]))",
           "legendFormat": "{{status}}",
           "refId": "A"
         }
@@ -500,7 +512,9 @@
         "footer": {
           "countRows": false,
           "fields": "",
-          "reducer": ["sum"],
+          "reducer": [
+            "sum"
+          ],
           "show": false
         },
         "showHeader": true,
@@ -514,7 +528,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "sum by (workflow_id) (rate(copperiq_n8n_webhook_calls_total{status=\"error\"}[5m])) / sum by (workflow_id) (rate(copperiq_n8n_webhook_calls_total[5m]))",
+          "expr": "sum by (workflow_id) (rate(copperiq_n8n_webhook_calls_total{namespace=\"$namespace\"}{status=\"error\"}[5m])) / sum by (workflow_id) (rate(copperiq_n8n_webhook_calls_total{namespace=\"$namespace\"}[5m]))",
           "format": "table",
           "instant": true,
           "refId": "A"
@@ -585,7 +599,7 @@
           "color": "rgba(255,0,255,0.7)"
         },
         "filterValues": {
-          "le": 1e-9
+          "le": 1E-09
         },
         "legend": {
           "show": true
@@ -606,7 +620,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "sum by (le, workflow_id) (rate(copperiq_n8n_webhook_duration_seconds_bucket[5m]))",
+          "expr": "sum by (le, workflow_id) (rate(copperiq_n8n_webhook_duration_seconds{namespace=\"$namespace\"}_bucket[5m]))",
           "format": "heatmap",
           "legendFormat": "{{workflow_id}}",
           "refId": "A"
@@ -658,7 +672,9 @@
         "footer": {
           "countRows": false,
           "fields": "",
-          "reducer": ["sum"],
+          "reducer": [
+            "sum"
+          ],
           "show": true
         },
         "showHeader": true,
@@ -672,7 +688,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "sum by (workflow_id, status) (copperiq_n8n_webhook_calls_total)",
+          "expr": "sum by (workflow_id, status) (copperiq_n8n_webhook_calls_total{namespace=\"$namespace\"})",
           "format": "table",
           "instant": true,
           "refId": "A"
@@ -703,7 +719,9 @@
           "options": {
             "fields": {
               "Count": {
-                "aggregations": ["sum"],
+                "aggregations": [
+                  "sum"
+                ],
                 "operation": "aggregate"
               },
               "Status": {
@@ -724,35 +742,72 @@
   "refresh": "30s",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["content-platform", "n8n", "integration"],
+  "tags": [
+    "content-platform",
+    "n8n",
+    "integration"
+  ],
   "templating": {
     "list": [
       {
+        "queryValue": "",
+        "multi": false,
+        "type": "custom",
+        "label": "Environment",
+        "description": "Select Content Platform environment",
+        "options": [
+          {
+            "value": "content-platform-accept",
+            "text": "content-platform-accept",
+            "selected": true
+          },
+          {
+            "value": "content-platform-prod",
+            "text": "content-platform-prod",
+            "selected": false
+          }
+        ],
+        "includeAll": false,
+        "query": "content-platform-accept,content-platform-prod",
+        "skipUrlSync": false,
+        "name": "namespace",
+        "hide": 0,
         "current": {
-          "selected": true,
-          "text": ["All"],
-          "value": ["$__all"]
+          "value": "content-platform-accept",
+          "text": "content-platform-accept",
+          "selected": false
+        }
+      },
+      {
+        "current": {
+          "value": [
+            "$__all"
+          ],
+          "text": [
+            "All"
+          ],
+          "selected": true
         },
+        "definition": "label_values(copperiq_n8n_webhook_calls_total{namespace=\\\"$namespace\\\"}, workflow_id)",
+        "query": {
+          "refId": "StandardVariableQuery",
+          "query": "label_values(copperiq_n8n_webhook_calls_total{namespace=\\\"$namespace\\\"}, workflow_id)"
+        },
+        "refresh": 1,
+        "label": "Workflow",
+        "name": "workflow_id",
+        "type": "query",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "options": [],
+        "regex": "",
         "datasource": {
           "type": "prometheus",
           "uid": "prometheus"
         },
-        "definition": "label_values(copperiq_n8n_webhook_calls_total, workflow_id)",
-        "hide": 0,
-        "includeAll": true,
-        "label": "Workflow",
-        "multi": true,
-        "name": "workflow_id",
-        "options": [],
-        "query": {
-          "query": "label_values(copperiq_n8n_webhook_calls_total, workflow_id)",
-          "refId": "StandardVariableQuery"
-        },
-        "refresh": 1,
-        "regex": "",
         "skipUrlSync": false,
-        "sort": 1,
-        "type": "query"
+        "sort": 1
       }
     ]
   },
