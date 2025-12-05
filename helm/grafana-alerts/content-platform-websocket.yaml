@@ -1,0 +1,376 @@
+apiVersion: 1
+groups:
+  - orgId: 1
+    name: content-platform-websocket
+    folder: Content Platform
+    interval: 1m
+    rules:
+      # CRITICAL ALERTS
+      - uid: content_platform_websocket_down
+        title: Content Platform - WebSocket Service Down
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 60
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: up{job=~".*websocket.*", namespace=~"content-platform-.*"}
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [1]
+                    type: lt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              expression: B
+              refId: C
+              type: threshold
+              conditions:
+                - evaluator:
+                    params: [1, 0]
+                    type: lt
+        noDataState: Alerting
+        execErrState: Alerting
+        for: 1m
+        annotations:
+          description: |-
+            WebSocket service is down on {{ $labels.namespace }}
+            IMPACT: Real-time updates broken - users won't see pipeline progress
+            ACTION: Check pod status, logs, and restart if necessary
+          summary: WebSocket service unavailable
+          runbook_url: https://socket.io/docs/v4/troubleshooting-connection-issues/
+        labels:
+          severity: critical
+          component: websocket
+          environment: "{{ $labels.namespace }}"
+        isPaused: false
+
+      - uid: content_platform_websocket_high_memory
+        title: Content Platform - WebSocket High Memory
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: (sum(container_memory_working_set_bytes{namespace=~"content-platform-.*", pod=~"websocket-.*", container!="", container!="POD"}) by (pod) / sum(container_spec_memory_limit_bytes{namespace=~"content-platform-.*", pod=~"websocket-.*", container!="", container!="POD"}) by (pod)) * 100
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              expression: B
+              refId: C
+              type: threshold
+              conditions:
+                - evaluator:
+                    params: [80, 0]
+                    type: gt
+        noDataState: NoData
+        execErrState: Alerting
+        for: 10m
+        annotations:
+          description: |-
+            WebSocket memory usage is above 80% on {{ $labels.namespace }}
+            Current: {{ $values.A.Value }}%
+            Risk of OOM kill - connections may be dropped
+          summary: WebSocket service memory critically high
+        labels:
+          severity: critical
+          component: websocket
+          environment: "{{ $labels.namespace }}"
+        isPaused: false
+
+      - uid: content_platform_websocket_high_event_loop_lag
+        title: Content Platform - WebSocket High Event Loop Lag
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: nodejs_eventloop_lag_mean_seconds{namespace=~"content-platform-.*", pod=~"websocket-.*"} or nodejs_eventloop_lag_seconds{namespace=~"content-platform-.*", pod=~"websocket-.*"}
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              expression: B
+              refId: C
+              type: threshold
+              conditions:
+                - evaluator:
+                    params: [0.5, 0]
+                    type: gt
+        noDataState: NoData
+        execErrState: Alerting
+        for: 5m
+        annotations:
+          description: |-
+            WebSocket event loop lag is above 500ms on {{ $labels.namespace }}
+            Current: {{ $values.A.Value }}s
+            Blocking operations detected - connections may timeout
+          summary: WebSocket service event loop blocked
+        labels:
+          severity: critical
+          component: websocket
+          environment: "{{ $labels.namespace }}"
+        isPaused: false
+
+      # WARNING ALERTS
+      - uid: content_platform_websocket_high_connection_count
+        title: Content Platform - WebSocket High Connection Count
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: websocket_connections_total{namespace=~"content-platform-.*"}
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              expression: B
+              refId: C
+              type: threshold
+              conditions:
+                - evaluator:
+                    params: [40, 0]
+                    type: gt
+        noDataState: NoData
+        execErrState: Alerting
+        for: 10m
+        annotations:
+          description: |-
+            WebSocket connections exceed 40 (80% of max 50) on {{ $labels.namespace }}
+            Current: {{ $values.A.Value }} connections
+            May need horizontal scaling soon
+          summary: WebSocket approaching connection capacity
+        labels:
+          severity: warning
+          component: websocket
+          environment: "{{ $labels.namespace }}"
+        isPaused: false
+
+      - uid: content_platform_websocket_connection_storm
+        title: Content Platform - WebSocket Connection Storm
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: rate(websocket_connections_established_total{namespace=~"content-platform-.*"}[1m])
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              expression: B
+              refId: C
+              type: threshold
+              conditions:
+                - evaluator:
+                    params: [10, 0]
+                    type: gt
+        noDataState: NoData
+        execErrState: Alerting
+        for: 5m
+        annotations:
+          description: |-
+            WebSocket connection rate exceeds 10/sec on {{ $labels.namespace }}
+            Current: {{ $values.A.Value }} connections/sec
+            Possible bot activity or DDoS attempt
+          summary: Unusually high WebSocket connection rate
+        labels:
+          severity: warning
+          component: websocket
+          environment: "{{ $labels.namespace }}"
+        isPaused: false
+
+      - uid: content_platform_websocket_auth_failures
+        title: Content Platform - WebSocket High Auth Failure Rate
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: rate(websocket_auth_failures_total{namespace=~"content-platform-.*"}[5m]) * 60
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              expression: B
+              refId: C
+              type: threshold
+              conditions:
+                - evaluator:
+                    params: [5, 0]
+                    type: gt
+        noDataState: NoData
+        execErrState: Alerting
+        for: 5m
+        annotations:
+          description: |-
+            WebSocket auth failure rate exceeds 5/min on {{ $labels.namespace }}
+            Current: {{ $values.A.Value }} failures/min
+            Possible attack or client misconfiguration
+          summary: High WebSocket authentication failure rate
+        labels:
+          severity: warning
+          component: websocket
+          environment: "{{ $labels.namespace }}"
+        isPaused: false
+
+      - uid: content_platform_websocket_subscription_errors
+        title: Content Platform - WebSocket Subscription Errors
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: increase(websocket_subscription_errors_total{namespace=~"content-platform-.*"}[5m])
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              expression: B
+              refId: C
+              type: threshold
+              conditions:
+                - evaluator:
+                    params: [5, 0]
+                    type: gt
+        noDataState: NoData
+        execErrState: Alerting
+        for: 5m
+        annotations:
+          description: |-
+            WebSocket subscription errors detected on {{ $labels.namespace }}
+            Errors in last 5min: {{ $values.A.Value }}
+            Check client/server compatibility and network stability
+          summary: WebSocket subscription operations failing
+        labels:
+          severity: warning
+          component: websocket
+          environment: "{{ $labels.namespace }}"
+        isPaused: false
+
+      - uid: content_platform_websocket_too_many_rooms
+        title: Content Platform - WebSocket Too Many Active Rooms
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: websocket_rooms_total{namespace=~"content-platform-.*"}
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              expression: B
+              refId: C
+              type: threshold
+              conditions:
+                - evaluator:
+                    params: [25, 0]
+                    type: gt
+        noDataState: NoData
+        execErrState: Alerting
+        for: 10m
+        annotations:
+          description: |-
+            Active WebSocket rooms exceed 25 (expected max 20) on {{ $labels.namespace }}
+            Current: {{ $values.A.Value }} rooms
+            Possible room cleanup issue or unexpected load
+          summary: Too many active WebSocket rooms
+        labels:
+          severity: warning
+          component: websocket
+          environment: "{{ $labels.namespace }}"
+        isPaused: false
