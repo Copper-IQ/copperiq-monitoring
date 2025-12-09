@@ -53,4 +53,8 @@ data:
 {{ .Files.Get "grafana-alerts/azure-postgresql.yaml" | indent 4 }}
   azure-mysql.yaml: |
 {{ .Files.Get "grafana-alerts/azure-mysql.yaml" | indent 4 }}
+
+  # Observability self-monitoring
+  prometheus-grafana-health.yaml: |
+{{ .Files.Get "grafana-alerts/prometheus-grafana-health.yaml" | indent 4 }}
 {{- end }}

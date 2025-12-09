@@ -130,6 +130,12 @@ All dashboards provisioned automatically via ConfigMaps with label `grafana_dash
 - **PostgreSQL/MySQL**: CPU, memory, storage, connections
 - **AKS**: Control plane health, API server latency
 
+### Observability Self-Monitoring
+- **Prometheus disk space**: Warning >75%, Critical >85%
+- **Prometheus health**: WAL corruption, scrape failures, query latency
+- **Grafana disk space**: Warning >75%, Critical >90%
+- **AlertManager**: Pod availability, configuration reload failures
+
 ## Current Scale Context
 
 **As of 2025-01:**
